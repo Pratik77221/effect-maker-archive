@@ -1,0 +1,5 @@
+:root { color-scheme: light; font: 14px/1.5 Roboto, Arial, sans-serif; background: #fff; color: #0f0f0f; }
+body { margin: 0; }
+#panel-start { padding: 24px; }
+#panel-start h1 { font-size: 19px; }
+#panel-start p { color: #606060; }

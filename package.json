@@ -1,0 +1,11 @@
+{
+  "name": "effect-maker-sync",
+  "version": "0.4.1",
+  "private": true,
+  "type": "module",
+  "description": "Export, import and back up YouTube Effect Maker projects",
+  "repository": { "type": "git", "url": "https://github.com/Pratik77221/effect-maker-archive.git" },
+  "homepage": "https://github.com/Pratik77221/effect-maker-archive",
+  "scripts": { "build": "node scripts/build-panel.js", "test": "node --test", "package": "node scripts/build-panel.js && python3 scripts/package-release.py", "check": "node --check extension/runtime.js && node --check extension/adapter.js && node --check extension/background.js && node --check extension/launch.js && node --check extension/popup.js && node --check extension/editor-panel.bundle.js && node --check extension/editor-job.bundle.js && node --check extension/editor-bridge.js && node --check extension/github-api.js && node --check extension/github-auth.js && node --check extension/github-panel.js && node --check extension/panel-page.js && node --check extension/panel-target.js" },
+  "engines": { "node": ">=22" }
+}

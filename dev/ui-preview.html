@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Effect Maker Archive — UI preview</title>
+  <style>
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body { margin: 0; color: #0f0f0f; background: #f8f8f8; font: 14px/1.5 Arial, sans-serif; }
+    .toolbar { height: 64px; padding: 0 28px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #e5e5e5; background: white; }
+    .toolbar img { width: 30px; height: 30px; }
+    .toolbar span { color: #606060; font-size: 12px; margin-left: auto; }
+    main { max-width: 390px; padding: 32px 28px; }
+    h1 { margin: 0 0 12px; font-size: 26px; letter-spacing: -.6px; line-height: 1.2; }
+    p { color: #606060; }
+    .scenarios { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0; }
+    .scenarios button, .compact-link { padding: 8px 14px; font: inherit; font-size: 12px; background: #fff; color: #0f0f0f; border: 1px solid #d9d9d9; border-radius: 20px; cursor: pointer; text-decoration: none; }
+    .scenarios button:hover { background: #ededed; }
+    .note { font-size: 12px; }
+    iframe { width: 390px; height: 590px; border: 1px solid #d9d9d9; border-radius: 18px; background: #f8f8f8; }
+    .compact-preview { display: none; position: absolute; right: 32px; top: 80px; }
+    body.compact .compact-preview { display: block; }
+    @media (max-width: 720px) { main { max-width: none; padding-bottom: 680px; } }
+  </style>
+</head>
+<body>
+  <div class="toolbar"><img src="../extension/icons/archive.svg" alt=""><strong>Effect Maker Archive</strong><span>Local UI preview</span></div>
+  <main>
+    <h1>Project files,<br>in a familiar workspace.</h1>
+    <p>The extension’s actual interface, using simulated responses. These controls do not connect to Effect Maker.</p>
+    <div class="scenarios">
+      <button data-scenario="ready">Ready</button>
+      <button data-scenario="selected">File selected</button>
+      <button data-scenario="working">Importing</button>
+      <button data-scenario="success">Success</button>
+      <button data-scenario="error">Error</button>
+      <button data-scenario="long">Long filename</button>
+    </div>
+    <a class="compact-link" href="?compact=1">View compact layout</a>
+    <p class="note">White and soft grey surfaces, YouTube red, blue file controls, and the editor’s rounded action buttons.</p>
+  </main>
+  <div class="compact-preview"><iframe title="Compact extension preview"></iframe></div>
+  <script type="module">
+    import { renderEditorPanel } from '../extension/editor-panel.js';
+    const parameters = new URLSearchParams(location.search);
+    const surface = parameters.has('surface');
+    const compact = parameters.has('compact');
+    if (surface) {
+      document.querySelector('main').hidden = true;
+      document.querySelector('.toolbar span').textContent = 'UI preview';
+    }
+    if (compact) {
+      document.body.className = 'compact';
+      document.querySelector('iframe').src = '?surface=1';
+      document.querySelector('.compact-link').href = './ui-preview.html';
+      document.querySelector('.compact-link').textContent = 'View full layout';
+      document.querySelector('.scenarios').hidden = true;
+    }
+    const archive = { format: 'effect-maker-source-archive', version: 1, project: { id: 'demo', title: 'Summer glow' }, source: [], sourceSha256: 'ui-preview', assets: [] };
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+    let scenario = 'ready';
+    async function invoke(operation, input, task) {
+      if (operation === 'export') return archive;
+      if (operation === 'preview-import') return task.wait('validation', 'Checking the project file and destination…', async () => ({ destination: { id: 'demo-destination' }, destinationSourceSha256: 'ui-preview-empty' }));
+      task.markWrite();
+      if (scenario === 'working') await task.wait('upload', 'Uploading asset 2 of 4… Keep this editor tab open.', () => delay(20000));
+      await task.wait('save', 'Saving project to Effect Maker…', async () => {
+        if (scenario === 'error') throw new Error('Saving timed out after 60 seconds.');
+      });
+      return { status: 'saved-reload-required', project: { title: 'Summer glow' }, assetsUploaded: 4 };
+    }
+    async function show(next) {
+      const current = document.getElementById('em-local-archive-controls');
+      if (current?.dataset.busy === 'true') {
+        Array.from(current.querySelectorAll('button')).find(button => button.textContent === 'Cancel')?.click();
+        await delay(0);
+      }
+      scenario = next;
+      renderEditorPanel(invoke);
+      if (next === 'ready') return;
+      const panel = document.getElementById('em-local-archive-controls');
+      const transfer = new DataTransfer();
+      transfer.items.add(new File([JSON.stringify(archive)], next === 'long' ? 'my-summer-glow-project-with-a-very-long-file-name-and-another-version-2026.json' : 'summer-glow.json', { type: 'application/json' }));
+      const input = panel.querySelector('input');
+      input.files = transfer.files;
+      input.dispatchEvent(new Event('change'));
+      while (panel.dataset.busy === 'true') await delay(20);
+      if (['working', 'success', 'error'].includes(next)) Array.from(panel.querySelectorAll('button')).find(button => button.textContent === 'Import project').click();
+    }
+    document.querySelectorAll('[data-scenario]').forEach(button => button.addEventListener('click', () => show(button.dataset.scenario)));
+    if (!compact) show('ready');
+  </script>
+</body>
+</html>

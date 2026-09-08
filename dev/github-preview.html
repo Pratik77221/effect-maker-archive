@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Effect Maker Archive — GitHub preview</title>
+<style>
+  *{box-sizing:border-box} [hidden]{display:none!important} body{margin:0;background:#f8f8f8;color:#0f0f0f;font:14px/1.5 Arial,sans-serif}
+  header.preview-header{height:64px;background:#fff;border-bottom:1px solid #ddd;display:flex;align-items:center;gap:12px;padding:0 28px} .preview-header img{width:30px;height:30px}
+  main{padding:32px 28px;max-width:420px} h1{font-size:26px;line-height:1.2;letter-spacing:-.5px;margin-top:0} main p{color:#606060}
+  .scenarios{display:flex;gap:8px;flex-wrap:wrap;margin:24px 0}.scenarios button{padding:8px 14px;background:#fff;border:1px solid #ccc;border-radius:20px;font:12px Arial;cursor:pointer}
+  .preview-note{font-size:12px} #approval-note{color:#137333}
+</style></head><body>
+<header class="preview-header"><img src="../extension/icons/archive.svg" alt=""><b>Effect Maker Archive</b></header>
+<main><h1>A home for your<br>project backups.</h1><p>GitHub interface preview with simulated accounts, commits and project responses. No real sign-in, network requests or repository writes.</p>
+<div class="scenarios"><button data-state="disconnected">Disconnected</button><button data-state="connected">Connected</button><button data-state="conflict">Conflict on push</button></div>
+<p class="preview-note">Try selecting a repository, pushing a backup, choosing an older version, and pulling it into Project files.</p><p id="approval-note"></p></main>
+<script type="module" src="github-preview.js"></script></body></html>

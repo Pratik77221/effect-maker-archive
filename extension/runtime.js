@@ -12,7 +12,7 @@ export function createOperationRuntime(options = {}) {
   let current = { stage: 'prepare', message: 'Preparing…', startedAt: started, limitMs: limits.total };
   const events = [];
   const snapshot = () => ({
-    extensionVersion: '0.4.1', operation: options.operation ?? 'project operation',
+    extensionVersion: '0.4.2', operation: options.operation ?? 'project operation',
     startedAt: new Date(started).toISOString(), elapsedMs: Date.now() - started,
     stage: current.stage, message: current.message, stageElapsedMs: Date.now() - current.startedAt,
     stageLimitMs: current.limitMs, totalLimitMs: limits.total, writesStarted,

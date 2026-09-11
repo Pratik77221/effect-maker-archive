@@ -1,6 +1,6 @@
 # Privacy declaration
 
-**Effect Maker Archive · version 0.4.1 · effective 8 September 2026**
+**Effect Maker Archive · version 0.4.2 · effective 11 September 2026**
 
 Maintained by [Pratik77221](https://github.com/Pratik77221). This declaration describes the extension distributed from [this repository](https://github.com/Pratik77221/effect-maker-archive), including its optional GitHub connection and local CLI.
 
@@ -39,6 +39,8 @@ Removing the extension or disconnecting GitHub does not delete your downloaded f
 ## Network transfers and access
 
 The extension has no developer collection endpoint. Project operations use the selected Google Effect Maker project and its asset service. Optional GitHub operations use `github.com` for device authorization and `api.github.com` for account/repository operations. These transfers use HTTPS. Google and GitHub can receive ordinary connection information, such as an IP address, when you connect to them.
+
+**Refresh repositories** requests updated repository choices and the selected repository's branches, backups and history directly from GitHub using the existing session token. Clicking **Create a repository** also schedules this metadata refresh when you return to the extension. Refreshing does not export, upload or import an Effect Maker project.
 
 GitHub sign-in requests the OAuth **`repo`** scope, which includes access to private repositories permitted by your account. The code uses that access for the displayed backup features. Push requires your action and a selected destination; public repositories also require the public-backup checkbox. Everyone who can access the selected repository can access its backups. You can revoke the OAuth app in your GitHub application settings.
 

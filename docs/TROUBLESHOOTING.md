@@ -2,11 +2,13 @@
 
 ## The extension does not open
 
-Open a project editor, rather than the Effect Maker dashboard, before clicking the icon. Confirm that Chrome loaded the folder containing `manifest.json`. After an update, reload the extension and the editor tab. Version 0.4.1 uses one reusable controls window and does not depend on Chrome's Side Panel API.
+Open a project editor, rather than the Effect Maker dashboard, before clicking the icon. Confirm that Chrome loaded the folder containing `manifest.json`. After an update, reload the extension and the editor tab. Version 0.4.2 uses one reusable controls window and does not depend on Chrome's Side Panel API.
 
 ## Unsupported editor build
 
-The adapter is pinned to `effectmaker.effectmaker.en_GB.k9eBOpQ9YWc.2020.O`. Google can update its editor independently of this extension. A different build stops import/export until its model contract has been reviewed. Report the displayed error and extension version; removing the build check is not a compatibility fix.
+Version **0.4.2** supports the current `effectmaker.effectmaker.en_GB.gfHrZWkok9A.2020.O` build and the earlier `effectmaker.effectmaker.en_GB.k9eBOpQ9YWc.2020.O` build. If version 0.4.1 shows this error, [install the update](SETUP.md#update-an-existing-installation), reload the extension, then reload the editor tab. Your earlier exported backups remain supported on the current build.
+
+Google can update its editor independently. Other builds still stop import/export until their contracts have been reviewed. The error now includes the detected build identifier; include it and the extension version in an issue. The latest [compatibility review](EDITOR-COMPATIBILITY.md) records the functions and upload fields checked.
 
 ## Destination is not empty
 
@@ -39,6 +41,10 @@ Use **Sign in again with GitHub** for expired authorization. Complete device app
 ## A GitHub backup now looks empty
 
 Push backs up the current project to the selected path. Pushing an empty project to an existing path updates that path with the empty state. Select an earlier **Version to pull**, or use GitHub's file history, to retrieve the previous backup. Use separate backup names for separate effects.
+
+## A new GitHub repository is missing
+
+Click **Refresh repositories**, directly below the repository selector. You can keep your existing GitHub sign-in. If you used **Create a repository** in the extension, returning to the controls triggers this refresh automatically. If an operation is still running, the refresh waits until it finishes. Check that the repository belongs to the connected account or is accessible to it if it remains missing.
 
 ## Reporting an issue
 

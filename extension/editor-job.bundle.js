@@ -13,7 +13,7 @@ const createOperationRuntime = function createOperationRuntime(options = {}) {
   let current = { stage: 'prepare', message: 'Preparing…', startedAt: started, limitMs: limits.total };
   const events = [];
   const snapshot = () => ({
-    extensionVersion: '0.4.1', operation: options.operation ?? 'project operation',
+    extensionVersion: '0.4.2', operation: options.operation ?? 'project operation',
     startedAt: new Date(started).toISOString(), elapsedMs: Date.now() - started,
     stage: current.stage, message: current.message, stageElapsedMs: Date.now() - current.startedAt,
     stageLimitMs: current.limitMs, totalLimitMs: limits.total, writesStarted,
@@ -108,7 +108,34 @@ const effectMakerOperation = async function effectMakerOperation(operation, inpu
   let projectId;
   try {
     runtime.check();
-    const BUILD = 'effectmaker.effectmaker.en_GB.k9eBOpQ9YWc.2020.O';
+    // Reviewed against the actual served clients; minified names are build-specific.
+    // Keep the previous profile for tabs that were already open during a rollout.
+    const previousBuild = 'effectmaker.effectmaker.en_GB.k9eBOpQ9YWc.2020.O';
+    const currentBuild = 'effectmaker.effectmaker.en_GB.gfHrZWkok9A.2020.O';
+    const profiles = {
+      [previousBuild]: {
+        symbols: {
+          injector: 'I', Model: 'hC', Source: 'XC', message: 'Ho', Scene: 'LC', objects: 'kM',
+          assetTree: 'tM', assets: 'wy', graph: 'uM', subgraphs: 'Hx', dependencies: 'Vwa',
+          AssetService: 'zA', assetUrl: 'BA', markJson: 'id', Command: 'Vs', dispatch: 'FQ', upload: 'tS',
+          imageId: 'zy', setImageId: 'ixa', glb: 'Dy', glbId: 'Cy', setGlbId: 'nxa',
+          sequence: 'yy', setStrings: 'nG', frameIds: 'xy', nodeInputs: 'ky', inputLinks: 'lM'
+        },
+        projectId: 'sb', title: 'yf', channelId: 'Ke', children: 'Cb', uploadProject: 'Td',
+        accepts: [previousBuild]
+      },
+      [currentBuild]: {
+        symbols: {
+          injector: 'I', Model: 'gC', Source: 'WC', message: 'Ho', Scene: 'KC', objects: 'iM',
+          assetTree: 'rM', assets: 'uy', graph: 'sM', subgraphs: 'Fx', dependencies: 'Wwa',
+          AssetService: 'yA', assetUrl: 'AA', markJson: 'id', Command: 'Vs', dispatch: 'CQ', upload: 'qS',
+          imageId: 'xy', setImageId: 'jxa', glb: 'By', glbId: 'Ay', setGlbId: 'oxa',
+          sequence: 'wy', setStrings: 'jG', frameIds: 'vy', nodeInputs: 'iy', inputLinks: 'jM'
+        },
+        projectId: 'mb', title: 'xf', channelId: 'Kd', children: 'Db', uploadProject: 'Ud',
+        accepts: [previousBuild, currentBuild]
+      }
+    };
     const FORMAT = 'effect-maker-source-archive';
     const MAX_ASSET = 10 * 1024 * 1024;
     const MAX_TOTAL = 40 * 1024 * 1024;
@@ -118,14 +145,17 @@ const effectMakerOperation = async function effectMakerOperation(operation, inpu
     const textHash = value => hash(new TextEncoder().encode(JSON.stringify(value)));
     const route = location.hostname === 'effects.youtube.com' && location.pathname.match(/^\/edit\/([a-zA-Z0-9_-]+)$/);
     if (!route) fail('Open an Effect Maker editor project first.');
-    const script = Array.from(document.scripts).find(s => s.src.includes('/k=' + BUILD + '/'));
-    if (!script) fail('Unsupported editor build. The adapter needs review before use.');
-    const ns = window.default_effectmaker;
-    for (const name of ['I', 'hC', 'XC', 'Ho', 'LC', 'kM', 'tM', 'wy', 'uM', 'Hx', 'Vwa']) {
-      if (typeof ns?.[name] !== 'function') fail('Editor adapter unavailable: ' + name);
-    }
-    const model = ns.I().resolve(ns.hC);
-    if (!model?.v || model.v.sb() !== route[1]) fail('Project is still loading or the editor model does not match this tab.');
+    const BUILD = Array.from(document.scripts, script => script.src.match(/\/k=(effectmaker\.effectmaker\.[^/]+)\//)?.[1]).find(Boolean);
+    const profile = profiles[BUILD];
+    if (!profile) fail('Unsupported editor build: ' + (BUILD || 'not detected') + '. Update Effect Maker Archive to the latest release. This build must be reviewed before use.');
+    const api = Object.fromEntries(Object.entries(profile.symbols).map(([name, symbol]) => [name, window.default_effectmaker?.[symbol]]));
+    const requireFunctions = names => {
+      for (const name of names) if (typeof api[name] !== 'function') fail('Editor adapter unavailable: ' + name + ' (' + profile.symbols[name] + ') in ' + BUILD + '.');
+    };
+    requireFunctions(['injector', 'Model', 'Source', 'message', 'Scene', 'objects', 'assetTree', 'assets', 'graph', 'subgraphs', 'dependencies', 'nodeInputs', 'inputLinks']);
+    const model = api.injector().resolve(api.Model);
+    if (typeof model?.v?.[profile.projectId] !== 'function' || model.v[profile.projectId]() !== route[1]) fail('Project is still loading or the editor model does not match this tab.');
+    if (typeof model.v[profile.title] !== 'function' || !model.ha || typeof model.ba?.value?.get !== 'function') fail('The editor model does not match this adapter. Reload the editor and update the extension.');
     projectId = route[1];
     const lockKey = Symbol.for('effect-maker-local-archive.imports');
     locks = window[lockKey] ??= new Map();
@@ -135,43 +165,41 @@ const effectMakerOperation = async function effectMakerOperation(operation, inpu
       throw error;
     }
     if (operation === 'import') { importLock = { reloadRequired: false }; locks.set(projectId, importLock); }
-    const sourceOf = () => ns.Ho(model.v, ns.XC, 4);
+    const sourceOf = () => api.message(model.v, api.Source, 4);
     const serializeSource = () => clone(sourceOf()?.toJSON() ?? []);
     const assetMap = () => model.ba.value;
-    const stillThisProject = () => location.hostname === 'effects.youtube.com' && location.pathname === '/edit/' + route[1] && model.v?.sb() === route[1];
-    const requireFunctions = names => {
-      for (const name of names) if (typeof ns[name] !== 'function') fail('Editor adapter unavailable: ' + name);
-    };
+    const stillThisProject = () => location.hostname === 'effects.youtube.com' && location.pathname === '/edit/' + route[1] && model.v?.[profile.projectId]?.() === route[1];
     const summary = source => {
-      const scene = ns.Ho(source, ns.LC, 2);
-      const tree = ns.tM(source);
-      const graph = ns.uM(source);
-      const objects = scene ? Array.from(ns.kM(scene).values()) : [];
-      const assets = tree ? Array.from(ns.wy(tree).values()) : [];
-      const graphs = graph ? [graph, ...ns.Hx(graph).values()] : [];
+      const scene = api.message(source, api.Scene, 2);
+      const tree = api.assetTree(source);
+      const graph = api.graph(source);
+      const objects = scene ? Array.from(api.objects(scene).values()) : [];
+      const assets = tree ? Array.from(api.assets(tree).values()) : [];
+      const graphs = graph ? [graph, ...api.subgraphs(graph).values()] : [];
       return {
-        objects: objects.filter(o => o.getId() !== 'scene-root').map(o => ({ id: o.getId(), name: o.Qa?.() ?? '', children: o.Cb?.() ?? [] })),
+        objects: objects.filter(o => o.getId() !== 'scene-root').map(o => ({ id: o.getId(), name: o.getName?.() ?? '', children: Array.from(o[profile.children]?.() ?? []) })),
         assets: assets.filter(a => a.pa() !== 0).map(a => ({ id: a.getId(), name: a.Qa(), type: a.pa() })),
         graphNodes: graphs.reduce((n, g) => n + g.Lb().size, 0),
-        graphEdges: graphs.reduce((n, g) => n + g.v().length, 0),
-        subgraphs: graph ? ns.Hx(graph).size : 0
+        graphEdges: graphs.reduce((n, g) => n + Array.from(g.Lb().values()).reduce((count, node) => count + Array.from(api.nodeInputs(node).values()).reduce((total, port) => total + api.inputLinks(port).length, 0), 0), 0),
+        graphVariables: graphs.reduce((n, g) => n + g.v().length, 0),
+        subgraphs: graph ? api.subgraphs(graph).size : 0
       };
     };
-    const identity = () => ({ id: route[1], title: model.v.yf(), build: BUILD, ...summary(sourceOf()) });
+    const identity = () => ({ id: route[1], title: model.v[profile.title](), build: BUILD, ...summary(sourceOf()) });
     if (operation === 'inspect') return { ...identity(), saveState: model.ha.value, binaryAssetRecords: assetMap().size, adapter: 'available' };
 
     if (operation === 'export') {
-      requireFunctions(['zA', 'BA']);
+      requireFunctions(['AssetService', 'assetUrl']);
       if (model.ha.value !== 0) fail('Wait until the editor has finished saving, then export again.');
       const source = serializeSource();
-      const assetService = ns.I().resolve(ns.zA);
-      const dependencies = ns.Vwa(sourceOf());
+      const assetService = api.injector().resolve(api.AssetService);
+      const dependencies = api.dependencies(sourceOf());
       const assets = [];
       let total = 0;
       for (const [id] of dependencies) {
         const record = assetMap().get(id);
         if (!record) fail('Missing binary asset record: ' + id);
-        const url = new URL(ns.BA(assetService, id));
+        const url = new URL(api.assetUrl(assetService, id));
         if (url.protocol !== 'https:' || url.hostname !== 'effects.usercontent.youtube.com' || !url.pathname.includes('/blueprint/' + route[1] + '/asset/')) fail('Asset URL outside this project.');
         const { bytes, response } = await runtime.wait('download', 'Downloading asset ' + (assets.length + 1) + ' of ' + dependencies.size + '…', async () => {
           const response = await fetch(url.href, { credentials: 'include', redirect: 'error', signal: runtime.signal });
@@ -206,7 +234,7 @@ const effectMakerOperation = async function effectMakerOperation(operation, inpu
       if (!stillThisProject() || JSON.stringify(source) !== JSON.stringify(serializeSource()) || model.ha.value !== 0) fail('Project changed during export; retry.');
       return {
         format: FORMAT, version: 1, createdAt: new Date().toISOString(),
-        project: { id: route[1], title: model.v.yf(), build: BUILD },
+        project: { id: route[1], title: model.v[profile.title](), build: BUILD },
         source, sourceSha256: await textHash(source), assets, summary: summary(sourceOf()),
         coverage: { authoringSource: true, referencedBinaryAssets: true, publishingMetadata: false, editorPreferences: false }
       };
@@ -215,32 +243,33 @@ const effectMakerOperation = async function effectMakerOperation(operation, inpu
     if (!['preview-import', 'import'].includes(operation)) fail('Unknown operation.');
     const archive = input.archive;
     const checked = await runtime.wait('validation', 'Checking project file…', async () => {
-      if (archive?.format !== FORMAT || archive.version !== 1 || archive.project?.build !== BUILD || !Array.isArray(archive.source) || !Array.isArray(archive.assets)) fail('Invalid or incompatible archive.');
+      if (archive?.format !== FORMAT || archive.version !== 1 || !Array.isArray(archive.source) || !Array.isArray(archive.assets)) fail('Invalid or incompatible archive.');
+      if (!profile.accepts.includes(archive.project?.build)) fail('This archive was made with an incompatible editor build (' + (archive.project?.build || 'unknown') + '). Update the extension and reload the editor.');
       if (JSON.stringify(archive).length > 60 * 1024 * 1024) fail('Archive too large.');
       if (await textHash(archive.source) !== archive.sourceSha256) fail('Source checksum mismatch.');
       if (typeof archive.project.id !== 'string' || !archive.project.id || typeof archive.project.title !== 'string') fail('Invalid project information in the file.');
       if (archive.project.id === route[1]) fail('Import requires a different, empty project.');
       const destination = identity();
-      if (destination.objects.length || destination.assets.length || destination.graphNodes || destination.graphEdges || destination.subgraphs) fail('Destination is not empty.');
+      if (destination.objects.length || destination.assets.length || destination.graphNodes || destination.graphEdges || destination.graphVariables || destination.subgraphs) fail('Destination is not empty.');
       if (model.ha.value !== 0) fail('Destination is still saving.');
-      requireFunctions(['id', 'FQ']);
+      requireFunctions(['markJson', 'dispatch']);
       // Match the editor's native JSON parser (Um): mark JSON arrays before parsing.
       const sourceData = clone(archive.source);
-      ns.id(sourceData, 32);
-      const source = new ns.XC(sourceData);
-      const dependencies = ns.Vwa(source);
+      api.markJson(sourceData, 32);
+      const source = new api.Source(sourceData);
+      const dependencies = api.dependencies(source);
       // Check all import support before any upload, including its remapping functions.
-      const tree = ns.tM(source);
-      const contentAssets = tree ? Array.from(ns.wy(tree).values()) : [];
-      if (!ns.Vs) fail('Editor command-handler token is unavailable.');
-      const commandHandler = ns.I().resolve(ns.Vs);
+      const tree = api.assetTree(source);
+      const contentAssets = tree ? Array.from(api.assets(tree).values()) : [];
+      if (!api.Command) fail('Editor command-handler token is unavailable.');
+      const commandHandler = api.injector().resolve(api.Command);
       if (typeof commandHandler?.resolveCommand !== 'function') fail('Editor command handler is unavailable.');
       if (typeof model.save !== 'function') fail('Editor save service is unavailable.');
-      if (dependencies.size) requireFunctions(['tS', 'zA']);
+      if (dependencies.size) requireFunctions(['upload', 'AssetService']);
       for (const asset of contentAssets) {
-        if (asset.pa() === 4) requireFunctions(['zy', 'ixa']);
-        else if (asset.pa() === 8) requireFunctions(['Dy', 'Cy', 'nxa']);
-        else if (asset.pa() === 6) requireFunctions(['yy', 'nG', 'xy']);
+        if (asset.pa() === 4) requireFunctions(['imageId', 'setImageId']);
+        else if (asset.pa() === 8) requireFunctions(['glb', 'glbId', 'setGlbId']);
+        else if (asset.pa() === 6) requireFunctions(['sequence', 'setStrings', 'frameIds']);
         else if (asset.pa() === 5) fail('LUT restoration is not implemented in this prototype.');
       }
       const decoded = new Map();
@@ -268,9 +297,9 @@ const effectMakerOperation = async function effectMakerOperation(operation, inpu
     if (input.destinationId !== route[1] || input.expectedSourceSha256 !== archive.sourceSha256 || input.expectedDestinationSha256 !== destinationSourceSha256) fail('Import preview is stale.');
     const baseline = JSON.stringify(serializeSource());
     const uploaded = new Map();
-    const channelId = model.v.Ke?.();
+    const channelId = model.v[profile.channelId]?.();
     if (decoded.size && (typeof channelId !== 'string' || !channelId)) fail('The destination channel is not ready. Reload the editor and try again.');
-    const assetService = decoded.size ? ns.I().resolve(ns.zA) : undefined;
+    const assetService = decoded.size ? api.injector().resolve(api.AssetService) : undefined;
     for (const [oldId, { asset, bytes }] of decoded) {
       runtime.check();
       if (JSON.stringify(serializeSource()) !== baseline || !stillThisProject() || model.ha.value !== 0) fail('Destination changed while uploading.');
@@ -278,7 +307,7 @@ const effectMakerOperation = async function effectMakerOperation(operation, inpu
       const filename = 'asset-' + asset.sha256.slice(0, 16) + '.' + extension;
       const result = await runtime.wait('upload', 'Uploading asset ' + (uploaded.size + 1) + ' of ' + decoded.size + '…', () => {
         runtime.markWrite();
-        return ns.tS(assetService, new File([bytes], filename, { type: asset.mime }), { fileName: filename, channelId, Td: projectId });
+        return api.upload(assetService, new File([bytes], filename, { type: asset.mime }), { fileName: filename, channelId, [profile.uploadProject]: projectId });
       }, { completed: uploaded.size, total: decoded.size, assetId: oldId, bytes: bytes.length });
       if (!result?.Ba()) fail('Upload did not return a usable asset record.');
       uploaded.set(oldId, result);
@@ -287,27 +316,27 @@ const effectMakerOperation = async function effectMakerOperation(operation, inpu
     for (const asset of contentAssets) {
       if (asset.pa() === 4) {
         const image = asset.Ta();
-        const old = ns.zy(image) || asset.getId();
-        if (uploaded.has(old)) ns.ixa(image, uploaded.get(old).Ba());
+        const old = api.imageId(image) || asset.getId();
+        if (uploaded.has(old)) api.setImageId(image, uploaded.get(old).Ba());
       } else if (asset.pa() === 8) {
-        const modelAsset = ns.Dy(asset);
-        const old = ns.Cy(modelAsset) || asset.getId();
-        if (uploaded.has(old)) ns.nxa(modelAsset, uploaded.get(old).Ba());
+        const modelAsset = api.glb(asset);
+        const old = api.glbId(modelAsset) || asset.getId();
+        if (uploaded.has(old)) api.setGlbId(modelAsset, uploaded.get(old).Ba());
       } else if (asset.pa() === 6) {
-        const sequence = ns.yy(asset);
-        ns.nG(sequence, 1, ns.xy(sequence).map(id => uploaded.get(id)?.Ba() ?? id));
+        const sequence = api.sequence(asset);
+        api.setStrings(sequence, 1, api.frameIds(sequence).map(id => uploaded.get(id)?.Ba() ?? id));
       }
     }
     const newIds = new Set(Array.from(uploaded.values(), r => r.Ba()));
-    if (Array.from(ns.Vwa(source).keys()).some(id => !newIds.has(id))) fail('An asset reference could not be remapped. Uploaded files remain only in the test destination.');
+    if (Array.from(api.dependencies(source).keys()).some(id => !newIds.has(id))) fail('An asset reference could not be remapped. Uploaded files remain only in the test destination.');
     runtime.check();
     if (JSON.stringify(serializeSource()) !== baseline || model.ha.value !== 0 || !stillThisProject()) fail('Destination changed before applying source.');
     const expectedSource = JSON.stringify(clone(source.toJSON()));
     const command = { applyEffectSourceCommand: { effectSourceJspb: source.serialize(), assetsJspb: Array.from(uploaded.values(), r => r.serialize()) } };
     await runtime.wait('apply', 'Applying objects and scripts…', async () => {
       runtime.markWrite();
-      // resolveCommand() returns a boolean. FQ exposes the actual completion promise.
-      const dispatched = ns.FQ(commandHandler, command);
+      // resolveCommand() returns a boolean; the dispatcher exposes completion.
+      const dispatched = api.dispatch(commandHandler, command);
       if (!dispatched?.handled || !dispatched.completion || typeof dispatched.completion.then !== 'function') fail('The editor did not accept the import command.');
       await dispatched.completion;
       runtime.check();

@@ -1,6 +1,6 @@
 {
   "name": "effect-maker-sync",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "private": true,
   "type": "module",
   "description": "Export, import and back up YouTube Effect Maker projects",

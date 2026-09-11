@@ -6,7 +6,7 @@ Export, import and back up your YouTube Effect Maker projects from one Chrome ex
 
 Save a complete project archive to your computer, restore it into an empty project, or connect GitHub to keep manual backups and version history. Local export/import works without connecting GitHub.
 
-**[Download v0.4.1](https://github.com/Pratik77221/effect-maker-archive/releases/latest)** · **[Setup and usage](docs/SETUP.md)** · **[GitHub backups](docs/GITHUB.md)** · **[Privacy declaration](PRIVACY.md)**
+**[Download v0.4.2](https://github.com/Pratik77221/effect-maker-archive/releases/latest)** · **[Setup and usage](docs/SETUP.md)** · **[GitHub backups](docs/GITHUB.md)** · **[Privacy declaration](PRIVACY.md)**
 
 This is an independent, unofficial project. It is not affiliated with, endorsed by, or supported by Google, YouTube or GitHub. Effect Maker has no official project import/export API; compatibility is limited to the inspected editor build. See [limitations](#compatibility-and-limits).
 
@@ -25,7 +25,7 @@ Backups preserve authoring objects, asset definitions, visual scripts and embedd
 
 ## Install in Chrome
 
-1. Open [Releases](https://github.com/Pratik77221/effect-maker-archive/releases/latest) and download **`effect-maker-archive-v0.4.1.zip`** from **Assets**.
+1. Open [Releases](https://github.com/Pratik77221/effect-maker-archive/releases/latest) and download **`effect-maker-archive-v0.4.2.zip`** from **Assets**.
 2. Extract the ZIP to a folder you will keep on your computer.
 3. Open `chrome://extensions` and enable **Developer mode**.
 4. Click **Load unpacked** and select the extracted folder containing `manifest.json`.
@@ -56,14 +56,14 @@ That is why our declaration says **no developer collection or tracking**, rather
 ## Compatibility and limits
 
 - Chrome **116+**. Other Chromium browsers have not been independently validated.
-- Inspected editor build: `effectmaker.effectmaker.en_GB.k9eBOpQ9YWc.2020.O`. Other builds are rejected until the adapter is reviewed.
+- Current inspected editor build: `effectmaker.effectmaker.en_GB.gfHrZWkok9A.2020.O`. The previous `effectmaker.effectmaker.en_GB.k9eBOpQ9YWc.2020.O` build is also supported. Other builds are rejected until reviewed. Backups from the previous build can be imported into the current build; downgrades are refused.
 - Import requires a separate **empty** destination. It does not merge into existing content.
 - Maximum archive: **60 MiB**; individual binary: **10 MiB**; combined binaries: **40 MiB**. These are extension limits, not Effect Maker's publication limits.
 - Supported binary imports: PNG, JPEG, WebP and GLB. LUT restoration is not implemented.
 - Operation deadlines include **3 minutes overall**, up to **90 seconds per upload**, **20 seconds to apply**, and **60 seconds to save**. These are ceilings, not expected durations.
 - A cancelled or failed import may leave uploads or project changes behind. There is no automatic rollback; reload and inspect the destination before retrying.
 
-The current build has user-reported working export/import and GitHub backup, with **65 automated tests** covering simulated editor/GitHub services and local archive behavior. This does not guarantee every effect or future editor build. [Verification details](docs/VERIFICATION.md) · [Troubleshooting](docs/TROUBLESHOOTING.md).
+Earlier releases have user-reported working export/import and GitHub backup. Version 0.4.2 adds compatibility with the editor served on 11 September 2026, regression tests and three offline round trips using the actual reviewed Google client code. Cloud transfer/save and AI execution on the new build still require real-service testing. [Verification details](docs/VERIFICATION.md) · [Troubleshooting](docs/TROUBLESHOOTING.md).
 
 ## For developers
 

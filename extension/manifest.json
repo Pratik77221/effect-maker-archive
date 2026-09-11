@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Effect Maker Archive",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "minimum_chrome_version": "116",
   "description": "Import and export Effect Maker projects, with GitHub backup and version history.",
   "homepage_url": "https://github.com/Pratik77221/effect-maker-archive",

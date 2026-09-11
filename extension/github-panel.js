@@ -1,11 +1,12 @@
 import { backupPath, createGitHubClient } from './github-api.js';
 import { createAuthStore, GITHUB_CLIENT_ID, signInWithDevice } from './github-auth.js';
 
-export function mountGitHubPanel(ui, { invoke, projectId, storage = chrome.storage, requestAccess, openAuthPage, copyText = text => navigator.clipboard.writeText(text), clientFactory = createGitHubClient, deviceLogin = signInWithDevice, clientId = GITHUB_CLIENT_ID, authStore = createAuthStore(storage) }) {
+export function mountGitHubPanel(ui, { invoke, projectId, storage = chrome.storage, requestAccess, openAuthPage, copyText = text => navigator.clipboard.writeText(text), clientFactory = createGitHubClient, deviceLogin = signInWithDevice, clientId = GITHUB_CLIENT_ID, authStore = createAuthStore(storage), windowEvents = globalThis }) {
   const root = ui.githubArea;
   let session, signingIn = false, busy = false, locked = false, selectedRepo, backups = [], stale = true;
   const histories = new Map();
-  let settingsReady = false, repositoriesLoaded = false;
+  let settingsReady = false, repositoriesLoaded = false, repositoriesAttempted = false;
+  let refreshAfterCreate = false, refreshPending = false;
   const add = (tag, text, parent = root, className) => {
     const element = document.createElement(tag);
     if (text !== undefined) element.textContent = text;
@@ -60,14 +61,24 @@ export function mountGitHubPanel(ui, { invoke, projectId, storage = chrome.stora
   const accountRow = add('div', undefined, connected, 'ema-gh-account');
   const account = add('span', '', accountRow);
   const disconnect = button('Disconnect', () => ui.run('github', 'Disconnecting GitHub…', async () => {
-    await authStore.disconnect(); session = undefined; selectedRepo = undefined; backups = []; stale = true; repositoriesLoaded = false;
+    await authStore.disconnect(); session = undefined; selectedRepo = undefined; backups = []; stale = true;
+    repositoriesLoaded = repositoriesAttempted = refreshAfterCreate = refreshPending = false;
     repo.value = ''; refresh(); return 'GitHub disconnected from this browser session.';
   }), accountRow, 'ema-gh-text-button');
   add('p', 'Sign-in lasts for this browser session.', connected, 'ema-description');
   const reconnect = button('Sign in again with GitHub', connect, connected, 'ema-gh-text-button');
   const repo = input('Repository', 'select', connected, 'repository');
+  const repositoryActions = add('div', undefined, connected, 'ema-gh-repository-actions');
+  const refreshButton = button('Refresh repositories', () => {
+    refreshPending = false;
+    return refreshRepositories();
+  }, repositoryActions, 'ema-gh-text-button');
+  const createRepository = link('Create a repository', 'https://github.com/new', repositoryActions);
+  createRepository.addEventListener('click', () => {
+    refreshAfterCreate = true;
+    localMessage.textContent = 'Create the repository on GitHub, then return here. The list will refresh automatically.';
+  });
   const repositoryHint = add('p', '', connected, 'ema-description');
-  const createRepository = link('Create a repository', 'https://github.com/new', connected);
   const advanced = document.createElement('details'); advanced.className = 'ema-details';
   add('summary', 'Backup options', advanced);
   const branch = input('Branch', 'select', advanced, 'branch');
@@ -84,9 +95,6 @@ export function mountGitHubPanel(ui, { invoke, projectId, storage = chrome.stora
   const commitMessage = input('Backup note (optional)', 'text', advanced, 'commit-message');
   commitMessage.maxLength = 200;
   commitMessage.placeholder = 'What changed?';
-  const refreshButton = button('Refresh repositories & backups', () => ui.run('github', 'Refreshing GitHub…', async task => {
-    await loadRepositories(task); return 'GitHub repositories and backups refreshed.';
-  }), connected, 'ema-gh-text-button');
   const pathText = add('p', '', connected, 'ema-gh-path');
   const actions = add('div', undefined, connected, 'ema-gh-actions');
   const push = button('Push backup', () => ui.run('push', 'Exporting your project for GitHub…', async task => {
@@ -159,6 +167,7 @@ export function mountGitHubPanel(ui, { invoke, projectId, storage = chrome.stora
   }
   async function loadRepository(task, preferred = {}) {
     selectedRepo = undefined; stale = true; backups = []; populateBackups();
+    repositoryHint.textContent = '';
     publicConsent.checked = false;
     replaceOptions(branch, 'Choose a branch', []);
     if (!repo.value) return;
@@ -174,16 +183,29 @@ export function mountGitHubPanel(ui, { invoke, projectId, storage = chrome.stora
     await loadBackups(task, preferred.path);
   }
   async function loadRepositories(task) {
-    repositoriesLoaded = true;
-    const chosen = repo.value;
+    repositoriesAttempted = true;
+    const selection = { repository: repo.value, branch: branch.value, path: backup.value, revision: revision.value };
     const stored = (await storage.local.get('ema.github.selection'))['ema.github.selection'] || {};
     const repositories = await client(task).repositories();
     task.check();
     repositories.sort((a,b) => Number(b.private) - Number(a.private) || a.full_name.localeCompare(b.full_name));
     replaceOptions(repo, 'Choose a repository', repositories.map(item => ({ label:item.full_name + (item.private ? ' · Private' : ' · Public'), value:item.full_name })));
-    const wanted = chosen || stored.repository;
+    const preferred = selection.repository ? selection : stored;
+    const wanted = preferred.repository;
     repo.value = repositories.some(item => item.full_name === wanted) ? wanted : '';
-    await loadRepository(task, stored.repository === repo.value ? stored : {});
+    await loadRepository(task, preferred.repository === repo.value ? preferred : {});
+    task.check();
+    if (repo.value === selection.repository && branch.value === selection.branch && backup.value === selection.path &&
+        Array.from(revision.children).some(option => option.value === selection.revision)) revision.value = selection.revision;
+    repositoriesLoaded = true;
+    localMessage.textContent = repositories.length ? repositories.length + ' repositories available. You can refresh this list without signing in again.' : 'No repositories found. Create one on GitHub, then return here or click Refresh repositories.';
+  }
+  function refreshRepositories() {
+    if (!session || busy || locked) return;
+    return ui.run('github', 'Refreshing GitHub repositories and backups…', async task => {
+      await loadRepositories(task);
+      return 'Repositories and backups refreshed. Choose a repository for your next push or pull.';
+    });
   }
   async function connect() {
     if (busy || locked) return;
@@ -218,7 +240,6 @@ export function mountGitHubPanel(ui, { invoke, projectId, storage = chrome.stora
   name.addEventListener('input', refresh);
   function refresh() {
     disconnected.hidden = !!session || signingIn; connected.hidden = !session || signingIn;
-    createRepository.hidden = !!repo.value;
     account.textContent = session ? 'Connected as ' + session.profile.login : '';
     const unavailable = busy || locked;
     for (const control of [signIn, reconnect, disconnect, repo, branch, backup, name, revision, commitMessage, refreshButton, publicConsent]) control.disabled = unavailable;
@@ -232,18 +253,29 @@ export function mountGitHubPanel(ui, { invoke, projectId, storage = chrome.stora
     if (!busy && !locked) queueMicrotask(loadWhenOpened);
   });
   function loadWhenOpened() {
-    if (!settingsReady || !session || repositoriesLoaded || ui.activeTab() !== 'github' || busy || locked) return;
-    repositoriesLoaded = true;
+    if (!settingsReady || !session || ui.activeTab() !== 'github' || busy || locked) return;
+    if (refreshPending) { refreshPending = false; return refreshRepositories(); }
+    if (repositoriesAttempted) return;
+    repositoriesAttempted = true;
     return ui.run('github', 'Loading your GitHub repositories…', async task => {
       await loadRepositories(task); return 'GitHub connected. Choose Push backup or Pull backup.';
     });
   }
-  ui.onTabChange(loadWhenOpened);
+  ui.onTabChange(() => {
+    if (!repositoriesLoaded) repositoriesAttempted = false;
+    return loadWhenOpened();
+  });
+  windowEvents.addEventListener?.('focus', () => {
+    if (!refreshAfterCreate) return;
+    refreshAfterCreate = false;
+    refreshPending = true;
+    loadWhenOpened();
+  });
   storage.onChanged?.addListener((changes, area) => {
     if (area !== 'session' || !changes['ema.github.session']) return;
     const updated = changes['ema.github.session'].newValue;
     if (updated?.profile?.id !== session?.profile?.id) {
-      selectedRepo = undefined; backups = []; stale = true; repositoriesLoaded = false;
+      selectedRepo = undefined; backups = []; stale = true; repositoriesLoaded = repositoriesAttempted = false;
       repo.value = ''; populateBackups();
     }
     session = updated;

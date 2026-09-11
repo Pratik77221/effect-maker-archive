@@ -13,7 +13,7 @@ const createOperationRuntime = function createOperationRuntime(options = {}) {
   let current = { stage: 'prepare', message: 'Preparing…', startedAt: started, limitMs: limits.total };
   const events = [];
   const snapshot = () => ({
-    extensionVersion: '0.4.1', operation: options.operation ?? 'project operation',
+    extensionVersion: '0.4.2', operation: options.operation ?? 'project operation',
     startedAt: new Date(started).toISOString(), elapsedMs: Date.now() - started,
     stage: current.stage, message: current.message, stageElapsedMs: Date.now() - current.startedAt,
     stageLimitMs: current.limitMs, totalLimitMs: limits.total, writesStarted,
@@ -108,7 +108,34 @@ const operation = async function effectMakerOperation(operation, input = {}, run
   let projectId;
   try {
     runtime.check();
-    const BUILD = 'effectmaker.effectmaker.en_GB.k9eBOpQ9YWc.2020.O';
+    // Reviewed against the actual served clients; minified names are build-specific.
+    // Keep the previous profile for tabs that were already open during a rollout.
+    const previousBuild = 'effectmaker.effectmaker.en_GB.k9eBOpQ9YWc.2020.O';
+    const currentBuild = 'effectmaker.effectmaker.en_GB.gfHrZWkok9A.2020.O';
+    const profiles = {
+      [previousBuild]: {
+        symbols: {
+          injector: 'I', Model: 'hC', Source: 'XC', message: 'Ho', Scene: 'LC', objects: 'kM',
+          assetTree: 'tM', assets: 'wy', graph: 'uM', subgraphs: 'Hx', dependencies: 'Vwa',
+          AssetService: 'zA', assetUrl: 'BA', markJson: 'id', Command: 'Vs', dispatch: 'FQ', upload: 'tS',
+          imageId: 'zy', setImageId: 'ixa', glb: 'Dy', glbId: 'Cy', setGlbId: 'nxa',
+          sequence: 'yy', setStrings: 'nG', frameIds: 'xy', nodeInputs: 'ky', inputLinks: 'lM'
+        },
+        projectId: 'sb', title: 'yf', channelId: 'Ke', children: 'Cb', uploadProject: 'Td',
+        accepts: [previousBuild]
+      },
+      [currentBuild]: {
+        symbols: {
+          injector: 'I', Model: 'gC', Source: 'WC', message: 'Ho', Scene: 'KC', objects: 'iM',
+          assetTree: 'rM', assets: 'uy', graph: 'sM', subgraphs: 'Fx', dependencies: 'Wwa',
+          AssetService: 'yA', assetUrl: 'AA', markJson: 'id', Command: 'Vs', dispatch: 'CQ', upload: 'qS',
+          imageId: 'xy', setImageId: 'jxa', glb: 'By', glbId: 'Ay', setGlbId: 'oxa',
+          sequence: 'wy', setStrings: 'jG', frameIds: 'vy', nodeInputs: 'iy', inputLinks: 'jM'
+        },
+        projectId: 'mb', title: 'xf', channelId: 'Kd', children: 'Db', uploadProject: 'Ud',
+        accepts: [previousBuild, currentBuild]
+      }
+    };
     const FORMAT = 'effect-maker-source-archive';
     const MAX_ASSET = 10 * 1024 * 1024;
     const MAX_TOTAL = 40 * 1024 * 1024;
@@ -118,14 +145,17 @@ const operation = async function effectMakerOperation(operation, input = {}, run
     const textHash = value => hash(new TextEncoder().encode(JSON.stringify(value)));
     const route = location.hostname === 'effects.youtube.com' && location.pathname.match(/^\/edit\/([a-zA-Z0-9_-]+)$/);
     if (!route) fail('Open an Effect Maker editor project first.');
-    const script = Array.from(document.scripts).find(s => s.src.includes('/k=' + BUILD + '/'));
-    if (!script) fail('Unsupported editor build. The adapter needs review before use.');
-    const ns = window.default_effectmaker;
-    for (const name of ['I', 'hC', 'XC', 'Ho', 'LC', 'kM', 'tM', 'wy', 'uM', 'Hx', 'Vwa']) {
-      if (typeof ns?.[name] !== 'function') fail('Editor adapter unavailable: ' + name);
-    }
-    const model = ns.I().resolve(ns.hC);
-    if (!model?.v || model.v.sb() !== route[1]) fail('Project is still loading or the editor model does not match this tab.');
+    const BUILD = Array.from(document.scripts, script => script.src.match(/\/k=(effectmaker\.effectmaker\.[^/]+)\//)?.[1]).find(Boolean);
+    const profile = profiles[BUILD];
+    if (!profile) fail('Unsupported editor build: ' + (BUILD || 'not detected') + '. Update Effect Maker Archive to the latest release. This build must be reviewed before use.');
+    const api = Object.fromEntries(Object.entries(profile.symbols).map(([name, symbol]) => [name, window.default_effectmaker?.[symbol]]));
+    const requireFunctions = names => {
+      for (const name of names) if (typeof api[name] !== 'function') fail('Editor adapter unavailable: ' + name + ' (' + profile.symbols[name] + ') in ' + BUILD + '.');
+    };
+    requireFunctions(['injector', 'Model', 'Source', 'message', 'Scene', 'objects', 'assetTree', 'assets', 'graph', 'subgraphs', 'dependencies', 'nodeInputs', 'inputLinks']);
+    const model = api.injector().resolve(api.Model);
+    if (typeof model?.v?.[profile.projectId] !== 'function' || model.v[profile.projectId]() !== route[1]) fail('Project is still loading or the editor model does not match this tab.');
+    if (typeof model.v[profile.title] !== 'function' || !model.ha || typeof model.ba?.value?.get !== 'function') fail('The editor model does not match this adapter. Reload the editor and update the extension.');
     projectId = route[1];
     const lockKey = Symbol.for('effect-maker-local-archive.imports');
     locks = window[lockKey] ??= new Map();
@@ -135,43 +165,41 @@ const operation = async function effectMakerOperation(operation, input = {}, run
       throw error;
     }
     if (operation === 'import') { importLock = { reloadRequired: false }; locks.set(projectId, importLock); }
-    const sourceOf = () => ns.Ho(model.v, ns.XC, 4);
+    const sourceOf = () => api.message(model.v, api.Source, 4);
     const serializeSource = () => clone(sourceOf()?.toJSON() ?? []);
     const assetMap = () => model.ba.value;
-    const stillThisProject = () => location.hostname === 'effects.youtube.com' && location.pathname === '/edit/' + route[1] && model.v?.sb() === route[1];
-    const requireFunctions = names => {
-      for (const name of names) if (typeof ns[name] !== 'function') fail('Editor adapter unavailable: ' + name);
-    };
+    const stillThisProject = () => location.hostname === 'effects.youtube.com' && location.pathname === '/edit/' + route[1] && model.v?.[profile.projectId]?.() === route[1];
     const summary = source => {
-      const scene = ns.Ho(source, ns.LC, 2);
-      const tree = ns.tM(source);
-      const graph = ns.uM(source);
-      const objects = scene ? Array.from(ns.kM(scene).values()) : [];
-      const assets = tree ? Array.from(ns.wy(tree).values()) : [];
-      const graphs = graph ? [graph, ...ns.Hx(graph).values()] : [];
+      const scene = api.message(source, api.Scene, 2);
+      const tree = api.assetTree(source);
+      const graph = api.graph(source);
+      const objects = scene ? Array.from(api.objects(scene).values()) : [];
+      const assets = tree ? Array.from(api.assets(tree).values()) : [];
+      const graphs = graph ? [graph, ...api.subgraphs(graph).values()] : [];
       return {
-        objects: objects.filter(o => o.getId() !== 'scene-root').map(o => ({ id: o.getId(), name: o.Qa?.() ?? '', children: o.Cb?.() ?? [] })),
+        objects: objects.filter(o => o.getId() !== 'scene-root').map(o => ({ id: o.getId(), name: o.getName?.() ?? '', children: Array.from(o[profile.children]?.() ?? []) })),
         assets: assets.filter(a => a.pa() !== 0).map(a => ({ id: a.getId(), name: a.Qa(), type: a.pa() })),
         graphNodes: graphs.reduce((n, g) => n + g.Lb().size, 0),
-        graphEdges: graphs.reduce((n, g) => n + g.v().length, 0),
-        subgraphs: graph ? ns.Hx(graph).size : 0
+        graphEdges: graphs.reduce((n, g) => n + Array.from(g.Lb().values()).reduce((count, node) => count + Array.from(api.nodeInputs(node).values()).reduce((total, port) => total + api.inputLinks(port).length, 0), 0), 0),
+        graphVariables: graphs.reduce((n, g) => n + g.v().length, 0),
+        subgraphs: graph ? api.subgraphs(graph).size : 0
       };
     };
-    const identity = () => ({ id: route[1], title: model.v.yf(), build: BUILD, ...summary(sourceOf()) });
+    const identity = () => ({ id: route[1], title: model.v[profile.title](), build: BUILD, ...summary(sourceOf()) });
     if (operation === 'inspect') return { ...identity(), saveState: model.ha.value, binaryAssetRecords: assetMap().size, adapter: 'available' };
 
     if (operation === 'export') {
-      requireFunctions(['zA', 'BA']);
+      requireFunctions(['AssetService', 'assetUrl']);
       if (model.ha.value !== 0) fail('Wait until the editor has finished saving, then export again.');
       const source = serializeSource();
-      const assetService = ns.I().resolve(ns.zA);
-      const dependencies = ns.Vwa(sourceOf());
+      const assetService = api.injector().resolve(api.AssetService);
+      const dependencies = api.dependencies(sourceOf());
       const assets = [];
       let total = 0;
       for (const [id] of dependencies) {
         const record = assetMap().get(id);
         if (!record) fail('Missing binary asset record: ' + id);
-        const url = new URL(ns.BA(assetService, id));
+        const url = new URL(api.assetUrl(assetService, id));
         if (url.protocol !== 'https:' || url.hostname !== 'effects.usercontent.youtube.com' || !url.pathname.includes('/blueprint/' + route[1] + '/asset/')) fail('Asset URL outside this project.');
         const { bytes, response } = await runtime.wait('download', 'Downloading asset ' + (assets.length + 1) + ' of ' + dependencies.size + '…', async () => {
           const response = await fetch(url.href, { credentials: 'include', redirect: 'error', signal: runtime.signal });
@@ -206,7 +234,7 @@ const operation = async function effectMakerOperation(operation, input = {}, run
       if (!stillThisProject() || JSON.stringify(source) !== JSON.stringify(serializeSource()) || model.ha.value !== 0) fail('Project changed during export; retry.');
       return {
         format: FORMAT, version: 1, createdAt: new Date().toISOString(),
-        project: { id: route[1], title: model.v.yf(), build: BUILD },
+        project: { id: route[1], title: model.v[profile.title](), build: BUILD },
         source, sourceSha256: await textHash(source), assets, summary: summary(sourceOf()),
         coverage: { authoringSource: true, referencedBinaryAssets: true, publishingMetadata: false, editorPreferences: false }
       };
@@ -215,32 +243,33 @@ const operation = async function effectMakerOperation(operation, input = {}, run
     if (!['preview-import', 'import'].includes(operation)) fail('Unknown operation.');
     const archive = input.archive;
     const checked = await runtime.wait('validation', 'Checking project file…', async () => {
-      if (archive?.format !== FORMAT || archive.version !== 1 || archive.project?.build !== BUILD || !Array.isArray(archive.source) || !Array.isArray(archive.assets)) fail('Invalid or incompatible archive.');
+      if (archive?.format !== FORMAT || archive.version !== 1 || !Array.isArray(archive.source) || !Array.isArray(archive.assets)) fail('Invalid or incompatible archive.');
+      if (!profile.accepts.includes(archive.project?.build)) fail('This archive was made with an incompatible editor build (' + (archive.project?.build || 'unknown') + '). Update the extension and reload the editor.');
       if (JSON.stringify(archive).length > 60 * 1024 * 1024) fail('Archive too large.');
       if (await textHash(archive.source) !== archive.sourceSha256) fail('Source checksum mismatch.');
       if (typeof archive.project.id !== 'string' || !archive.project.id || typeof archive.project.title !== 'string') fail('Invalid project information in the file.');
       if (archive.project.id === route[1]) fail('Import requires a different, empty project.');
       const destination = identity();
-      if (destination.objects.length || destination.assets.length || destination.graphNodes || destination.graphEdges || destination.subgraphs) fail('Destination is not empty.');
+      if (destination.objects.length || destination.assets.length || destination.graphNodes || destination.graphEdges || destination.graphVariables || destination.subgraphs) fail('Destination is not empty.');
       if (model.ha.value !== 0) fail('Destination is still saving.');
-      requireFunctions(['id', 'FQ']);
+      requireFunctions(['markJson', 'dispatch']);
       // Match the editor's native JSON parser (Um): mark JSON arrays before parsing.
       const sourceData = clone(archive.source);
-      ns.id(sourceData, 32);
-      const source = new ns.XC(sourceData);
-      const dependencies = ns.Vwa(source);
+      api.markJson(sourceData, 32);
+      const source = new api.Source(sourceData);
+      const dependencies = api.dependencies(source);
       // Check all import support before any upload, including its remapping functions.
-      const tree = ns.tM(source);
-      const contentAssets = tree ? Array.from(ns.wy(tree).values()) : [];
-      if (!ns.Vs) fail('Editor command-handler token is unavailable.');
-      const commandHandler = ns.I().resolve(ns.Vs);
+      const tree = api.assetTree(source);
+      const contentAssets = tree ? Array.from(api.assets(tree).values()) : [];
+      if (!api.Command) fail('Editor command-handler token is unavailable.');
+      const commandHandler = api.injector().resolve(api.Command);
       if (typeof commandHandler?.resolveCommand !== 'function') fail('Editor command handler is unavailable.');
       if (typeof model.save !== 'function') fail('Editor save service is unavailable.');
-      if (dependencies.size) requireFunctions(['tS', 'zA']);
+      if (dependencies.size) requireFunctions(['upload', 'AssetService']);
       for (const asset of contentAssets) {
-        if (asset.pa() === 4) requireFunctions(['zy', 'ixa']);
-        else if (asset.pa() === 8) requireFunctions(['Dy', 'Cy', 'nxa']);
-        else if (asset.pa() === 6) requireFunctions(['yy', 'nG', 'xy']);
+        if (asset.pa() === 4) requireFunctions(['imageId', 'setImageId']);
+        else if (asset.pa() === 8) requireFunctions(['glb', 'glbId', 'setGlbId']);
+        else if (asset.pa() === 6) requireFunctions(['sequence', 'setStrings', 'frameIds']);
         else if (asset.pa() === 5) fail('LUT restoration is not implemented in this prototype.');
       }
       const decoded = new Map();
@@ -268,9 +297,9 @@ const operation = async function effectMakerOperation(operation, input = {}, run
     if (input.destinationId !== route[1] || input.expectedSourceSha256 !== archive.sourceSha256 || input.expectedDestinationSha256 !== destinationSourceSha256) fail('Import preview is stale.');
     const baseline = JSON.stringify(serializeSource());
     const uploaded = new Map();
-    const channelId = model.v.Ke?.();
+    const channelId = model.v[profile.channelId]?.();
     if (decoded.size && (typeof channelId !== 'string' || !channelId)) fail('The destination channel is not ready. Reload the editor and try again.');
-    const assetService = decoded.size ? ns.I().resolve(ns.zA) : undefined;
+    const assetService = decoded.size ? api.injector().resolve(api.AssetService) : undefined;
     for (const [oldId, { asset, bytes }] of decoded) {
       runtime.check();
       if (JSON.stringify(serializeSource()) !== baseline || !stillThisProject() || model.ha.value !== 0) fail('Destination changed while uploading.');
@@ -278,7 +307,7 @@ const operation = async function effectMakerOperation(operation, input = {}, run
       const filename = 'asset-' + asset.sha256.slice(0, 16) + '.' + extension;
       const result = await runtime.wait('upload', 'Uploading asset ' + (uploaded.size + 1) + ' of ' + decoded.size + '…', () => {
         runtime.markWrite();
-        return ns.tS(assetService, new File([bytes], filename, { type: asset.mime }), { fileName: filename, channelId, Td: projectId });
+        return api.upload(assetService, new File([bytes], filename, { type: asset.mime }), { fileName: filename, channelId, [profile.uploadProject]: projectId });
       }, { completed: uploaded.size, total: decoded.size, assetId: oldId, bytes: bytes.length });
       if (!result?.Ba()) fail('Upload did not return a usable asset record.');
       uploaded.set(oldId, result);
@@ -287,27 +316,27 @@ const operation = async function effectMakerOperation(operation, input = {}, run
     for (const asset of contentAssets) {
       if (asset.pa() === 4) {
         const image = asset.Ta();
-        const old = ns.zy(image) || asset.getId();
-        if (uploaded.has(old)) ns.ixa(image, uploaded.get(old).Ba());
+        const old = api.imageId(image) || asset.getId();
+        if (uploaded.has(old)) api.setImageId(image, uploaded.get(old).Ba());
       } else if (asset.pa() === 8) {
-        const modelAsset = ns.Dy(asset);
-        const old = ns.Cy(modelAsset) || asset.getId();
-        if (uploaded.has(old)) ns.nxa(modelAsset, uploaded.get(old).Ba());
+        const modelAsset = api.glb(asset);
+        const old = api.glbId(modelAsset) || asset.getId();
+        if (uploaded.has(old)) api.setGlbId(modelAsset, uploaded.get(old).Ba());
       } else if (asset.pa() === 6) {
-        const sequence = ns.yy(asset);
-        ns.nG(sequence, 1, ns.xy(sequence).map(id => uploaded.get(id)?.Ba() ?? id));
+        const sequence = api.sequence(asset);
+        api.setStrings(sequence, 1, api.frameIds(sequence).map(id => uploaded.get(id)?.Ba() ?? id));
       }
     }
     const newIds = new Set(Array.from(uploaded.values(), r => r.Ba()));
-    if (Array.from(ns.Vwa(source).keys()).some(id => !newIds.has(id))) fail('An asset reference could not be remapped. Uploaded files remain only in the test destination.');
+    if (Array.from(api.dependencies(source).keys()).some(id => !newIds.has(id))) fail('An asset reference could not be remapped. Uploaded files remain only in the test destination.');
     runtime.check();
     if (JSON.stringify(serializeSource()) !== baseline || model.ha.value !== 0 || !stillThisProject()) fail('Destination changed before applying source.');
     const expectedSource = JSON.stringify(clone(source.toJSON()));
     const command = { applyEffectSourceCommand: { effectSourceJspb: source.serialize(), assetsJspb: Array.from(uploaded.values(), r => r.serialize()) } };
     await runtime.wait('apply', 'Applying objects and scripts…', async () => {
       runtime.markWrite();
-      // resolveCommand() returns a boolean. FQ exposes the actual completion promise.
-      const dispatched = ns.FQ(commandHandler, command);
+      // resolveCommand() returns a boolean; the dispatcher exposes completion.
+      const dispatched = api.dispatch(commandHandler, command);
       if (!dispatched?.handled || !dispatched.completion || typeof dispatched.completion.then !== 'function') fail('The editor did not accept the import command.');
       await dispatched.completion;
       runtime.check();
@@ -329,15 +358,15 @@ const operation = async function effectMakerOperation(operation, input = {}, run
     if (ownsRuntime) runtime.finish();
   }
 };
-const panelStyles = "\n#em-local-archive-controls {\n  all: initial;\n  position: fixed;\n  z-index: 2147483647;\n  top: 80px;\n  right: 20px;\n  display: flex;\n  flex-direction: column;\n  width: 384px;\n  max-width: calc(100vw - 32px);\n  max-height: calc(100vh - 96px);\n  max-height: calc(100dvh - 96px);\n  box-sizing: border-box;\n  overflow: hidden;\n  color: #0f0f0f;\n  background: #fff;\n  border: 1px solid #dedede;\n  border-radius: 16px;\n  box-shadow: 0 8px 32px rgba(0,0,0,.12), 0 2px 6px rgba(0,0,0,.04);\n  font: 14px/1.45 Roboto, Arial, sans-serif;\n  text-align: left;\n  color-scheme: light;\n  isolation: isolate;\n}\n#em-local-archive-controls *,\n#em-local-archive-controls *::before,\n#em-local-archive-controls *::after { box-sizing: border-box; }\n#em-local-archive-controls [hidden] { display: none !important; }\n#em-local-archive-controls :is(h2,h3,p,pre) { margin: 0; padding: 0; font: inherit; color: inherit; }\n#em-local-archive-controls button { all: unset; box-sizing: border-box; font: inherit; }\n#em-local-archive-controls :is(button,input,summary):focus-visible,\n#em-local-archive-controls .ema-picker:focus-within { outline: 2px solid #065fd4; outline-offset: 3px; }\n#em-local-archive-controls svg { display: block; width: 20px; height: 20px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }\n#em-local-archive-controls .ema-header { display: flex; align-items: center; gap: 12px; padding: 20px; border-bottom: 1px solid #ededed; flex: 0 0 auto; }\n#em-local-archive-controls .ema-brand { display: grid; place-items: center; width: 40px; height: 40px; flex: 0 0 auto; color: #fff; background: #ff0033; border-radius: 12px; }\n#em-local-archive-controls .ema-brand svg { width: 25px; height: 25px; }\n#em-local-archive-controls .ema-heading { flex: 1; min-width: 0; }\n#em-local-archive-controls h2 { font-size: 18px; font-weight: 600; line-height: 1.3; letter-spacing: -.2px; }\n#em-local-archive-controls .ema-subtitle { margin-top: 3px; color: #606060; font-size: 12px; }\n#em-local-archive-controls .ema-close { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 auto; border-radius: 50%; cursor: pointer; color: #606060; }\n#em-local-archive-controls .ema-close:hover:not(:disabled) { background: #f2f2f2; color: #0f0f0f; }\n#em-local-archive-controls .ema-close:disabled { opacity: .35; cursor: default; }\n#em-local-archive-controls .ema-body { padding: 20px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; min-height: 0; }\n#em-local-archive-controls .ema-section { padding: 0; }\n#em-local-archive-controls .ema-section-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }\n#em-local-archive-controls .ema-section-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; flex: 0 0 auto; background: #f2f2f2; }\n#em-local-archive-controls .ema-section-copy { flex: 1; min-width: 0; }\n#em-local-archive-controls h3 { font-size: 15px; font-weight: 600; line-height: 1.4; }\n#em-local-archive-controls .ema-description { margin-top: 3px; font-size: 12px; color: #606060; line-height: 1.5; }\n#em-local-archive-controls .ema-button { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 40px; padding: 10px 16px; border: 1px solid transparent; border-radius: 22px; background: #0f0f0f; color: #fff; font-size: 14px; line-height: 18px; font-weight: 500; cursor: pointer; transition: background .15s, border-color .15s; text-align: center; }\n#em-local-archive-controls .ema-button > svg { order: -1; width: 18px; height: 18px; }\n#em-local-archive-controls .ema-button:hover:not(:disabled) { background: #303030; }\n#em-local-archive-controls .ema-button:disabled { background: #f2f2f2; color: #909090; cursor: default; }\n#em-local-archive-controls .ema-button-secondary { background: #fff; border-color: #d9d9d9; color: #0f0f0f; }\n#em-local-archive-controls .ema-button-secondary:hover:not(:disabled) { background: #f2f2f2; border-color: #c6c6c6; }\n#em-local-archive-controls .ema-divider { height: 1px; border: 0; background: #e9e9e9; margin: 20px 0; }\n#em-local-archive-controls .ema-picker { position: relative; display: flex; align-items: center; gap: 12px; padding: 16px 14px; margin-bottom: 12px; background: #fafafa; border: 1px dashed #bdbdbd; border-radius: 12px; cursor: pointer; transition: background .15s, border-color .15s; }\n#em-local-archive-controls .ema-picker:hover:not([data-disabled=\"true\"]) { background: #f0f6ff; border-color: #065fd4; }\n#em-local-archive-controls .ema-picker[data-state=\"selected\"] { border-style: solid; border-color: #b8d4ef; background: #f5f9ff; }\n#em-local-archive-controls .ema-picker[data-state=\"error\"] { border-color: #c88e8e; }\n#em-local-archive-controls .ema-picker[data-disabled=\"true\"] { opacity: .55; cursor: default; }\n#em-local-archive-controls .ema-picker > svg { color: #065fd4; width: 24px; height: 24px; }\n#em-local-archive-controls .ema-picker-copy { min-width: 0; flex: 1; }\n#em-local-archive-controls .ema-file-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #065fd4; font-size: 13px; font-weight: 500; }\n#em-local-archive-controls .ema-file-hint { display: block; margin-top: 3px; color: #606060; font-size: 11px; line-height: 1.4; }\n#em-local-archive-controls .ema-file-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font: inherit; }\n#em-local-archive-controls .ema-file-input:disabled { cursor: default; }\n#em-local-archive-controls .ema-note { margin-top: 10px; color: #606060; font-size: 11px; text-align: center; }\n#em-local-archive-controls .ema-status { margin-top: 20px; padding: 14px; border: 1px solid #e9e9e9; border-radius: 12px; background: #f8f8f8; }\n#em-local-archive-controls .ema-status-heading { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; font-size: 13px; font-weight: 500; }\n#em-local-archive-controls .ema-status-mark { display: grid; place-items: center; width: 16px; height: 16px; flex: 0 0 auto; border: 1.5px solid currentColor; border-radius: 50%; color: #606060; font: 600 10px/1 Arial, sans-serif; }\n#em-local-archive-controls .ema-result { color: #606060; font-size: 12px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }\n#em-local-archive-controls .ema-time { margin-top: 7px; color: #606060; font-size: 11px; font-variant-numeric: tabular-nums; }\n#em-local-archive-controls .ema-time:empty { display: none; }\n#em-local-archive-controls .ema-status[data-state=\"working\"] { border-color: #d6e6f7; background: #f5f9ff; }\n#em-local-archive-controls .ema-status[data-state=\"working\"] .ema-status-mark { border-color: #c7dcf4; border-top-color: #065fd4; animation: ema-spin .9s linear infinite; }\n#em-local-archive-controls .ema-status[data-state=\"success\"] { border-color: #d2e7db; background: #f3faf6; }\n#em-local-archive-controls .ema-status[data-state=\"success\"] .ema-status-mark { color: #137333; }\n#em-local-archive-controls .ema-status[data-state=\"error\"] { border-color: #f0d5d5; background: #fff7f7; }\n#em-local-archive-controls .ema-status[data-state=\"error\"] .ema-status-mark { color: #b3261e; }\n#em-local-archive-controls .ema-status .ema-button { margin-top: 12px; min-height: 36px; padding: 8px 14px; font-size: 13px; }\n#em-local-archive-controls .ema-details { margin-top: 14px; color: #606060; font-size: 12px; }\n#em-local-archive-controls .ema-details summary { width: fit-content; border-radius: 3px; cursor: pointer; font-weight: 500; }\n#em-local-archive-controls .ema-details pre { margin-top: 10px; max-height: 180px; overflow: auto; padding: 12px; border-radius: 8px; background: #f8f8f8; color: #454545; white-space: pre-wrap; overflow-wrap: anywhere; font: 11px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; }\n#em-local-archive-controls .ema-log { margin-top: 10px; color: #065fd4; cursor: pointer; font-size: 12px; font-weight: 500; border-radius: 3px; }\n#em-local-archive-controls .ema-log:hover { text-decoration: underline; }\n#em-local-archive-controls .ema-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px; border-top: 1px solid #ededed; background: #fafafa; color: #606060; font-size: 10px; flex: 0 0 auto; }\n#em-local-archive-controls .ema-footer span:first-child { display: flex; align-items: center; gap: 5px; }\n#em-local-archive-controls .ema-footer svg { width: 13px; height: 13px; }\n#em-local-archive-controls[data-surface=\"side-panel\"] { inset: 0; width: 100%; max-width: none; height: 100vh; height: 100dvh; max-height: none; border: 0; border-radius: 0; box-shadow: none; }\n#em-local-archive-controls .ema-tabs { display: flex; gap: 4px; padding: 4px; margin-bottom: 20px; background: #f2f2f2; border-radius: 10px; }\n#em-local-archive-controls .ema-tab { flex: 1; padding: 8px 4px; border-radius: 7px; color: #606060; cursor: pointer; font-size: 12px; font-weight: 500; text-align: center; }\n#em-local-archive-controls .ema-tab[aria-selected=\"true\"] { color: #0f0f0f; background: #fff; box-shadow: 0 1px 3px #0001; }\n#em-local-archive-controls .ema-gh-connect > .ema-button { margin-top: 18px; }\n#em-local-archive-controls .ema-gh-field { display: flex; flex-direction: column; gap: 5px; margin: 14px 0 10px; color: #454545; font-size: 12px; }\n#em-local-archive-controls .ema-gh-field :is(input,select) { box-sizing: border-box; width: 100%; min-width: 0; height: 38px; padding: 8px 10px; color: #0f0f0f; background: #fff; border: 1px solid #ccc; border-radius: 8px; font: 13px Roboto, Arial, sans-serif; }\n#em-local-archive-controls .ema-gh-field :is(input,select):disabled { color: #909090; background: #f8f8f8; }\n#em-local-archive-controls .ema-gh-field select:focus-visible { outline: 2px solid #065fd4; outline-offset: 2px; }\n#em-local-archive-controls .ema-gh-link { display: inline-block; margin-top: 8px; color: #065fd4; font-size: 12px; text-decoration: none; }\n#em-local-archive-controls .ema-gh-link:hover { text-decoration: underline; }\n#em-local-archive-controls .ema-gh-text-button { color: #065fd4; font-size: 12px; font-weight: 500; cursor: pointer; border-radius: 3px; }\n#em-local-archive-controls .ema-gh-text-button:disabled { color: #909090; cursor: default; }\n#em-local-archive-controls .ema-gh-text-button:hover:not(:disabled) { text-decoration: underline; }\n#em-local-archive-controls .ema-gh-account { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 18px; padding: 12px; color: #137333; background: #f3faf6; border: 1px solid #d2e7db; border-radius: 10px; font-size: 12px; }\n#em-local-archive-controls .ema-gh-account > span { min-width: 0; overflow-wrap: anywhere; }\n#em-local-archive-controls .ema-gh-account button { flex: 0 0 auto; }\n#em-local-archive-controls .ema-gh-connected > .ema-button { margin-top: 12px; }\n#em-local-archive-controls .ema-gh-actions { display: flex; gap: 8px; margin-top: 12px; }\n#em-local-archive-controls .ema-gh-actions .ema-button { flex: 1; padding: 10px 8px; min-width: 0; }\n#em-local-archive-controls .ema-gh-public { display: flex; align-items: flex-start; gap: 8px; margin: 12px 0; padding: 12px; background: #fff8e8; border-radius: 8px; font-size: 12px; }\n#em-local-archive-controls .ema-gh-public input { margin: 3px 0 0; accent-color: #065fd4; }\n#em-local-archive-controls .ema-gh-path { margin-top: 12px; font-size: 11px; color: #606060; white-space: pre-wrap; overflow-wrap: anywhere; }\n#em-local-archive-controls .ema-gh-device { padding: 16px; margin-top: 16px; border: 1px solid #d6e6f7; border-radius: 12px; background: #f5f9ff; font-size: 13px; }\n#em-local-archive-controls .ema-gh-device code { display: block; padding: 14px 0 8px; color: #0f0f0f; font: 600 25px/1.2 ui-monospace, Consolas, monospace; letter-spacing: 2px; }\n#em-local-archive-controls .ema-gh-device .ema-button { margin: 12px 0 8px; font-size: 13px; }\n#em-local-archive-controls .ema-details[open] > .ema-description { margin-top: 10px; }\n@keyframes ema-spin { to { transform: rotate(360deg); } }\n@media (max-width: 440px) {\n  #em-local-archive-controls { top: 72px; right: 12px; max-width: calc(100vw - 24px); max-height: calc(100dvh - 84px); }\n  #em-local-archive-controls .ema-header { padding: 16px; gap: 10px; }\n  #em-local-archive-controls .ema-body { padding: 16px; }\n  #em-local-archive-controls .ema-footer { padding: 12px 16px; }\n  #em-local-archive-controls h2 { font-size: 17px; }\n  #em-local-archive-controls[data-surface=\"side-panel\"] { inset: 0; max-width: none; max-height: none; }\n}\n@media (prefers-reduced-motion: reduce) {\n  #em-local-archive-controls .ema-status-mark { animation: none !important; }\n  #em-local-archive-controls :is(.ema-button,.ema-picker) { transition: none; }\n}\n";
+const panelStyles = "\n#em-local-archive-controls {\n  all: initial;\n  position: fixed;\n  z-index: 2147483647;\n  top: 80px;\n  right: 20px;\n  display: flex;\n  flex-direction: column;\n  width: 384px;\n  max-width: calc(100vw - 32px);\n  max-height: calc(100vh - 96px);\n  max-height: calc(100dvh - 96px);\n  box-sizing: border-box;\n  overflow: hidden;\n  color: #0f0f0f;\n  background: #fff;\n  border: 1px solid #dedede;\n  border-radius: 16px;\n  box-shadow: 0 8px 32px rgba(0,0,0,.12), 0 2px 6px rgba(0,0,0,.04);\n  font: 14px/1.45 Roboto, Arial, sans-serif;\n  text-align: left;\n  color-scheme: light;\n  isolation: isolate;\n}\n#em-local-archive-controls *,\n#em-local-archive-controls *::before,\n#em-local-archive-controls *::after { box-sizing: border-box; }\n#em-local-archive-controls [hidden] { display: none !important; }\n#em-local-archive-controls :is(h2,h3,p,pre) { margin: 0; padding: 0; font: inherit; color: inherit; }\n#em-local-archive-controls button { all: unset; box-sizing: border-box; font: inherit; }\n#em-local-archive-controls :is(button,input,summary):focus-visible,\n#em-local-archive-controls .ema-picker:focus-within { outline: 2px solid #065fd4; outline-offset: 3px; }\n#em-local-archive-controls svg { display: block; width: 20px; height: 20px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }\n#em-local-archive-controls .ema-header { display: flex; align-items: center; gap: 12px; padding: 20px; border-bottom: 1px solid #ededed; flex: 0 0 auto; }\n#em-local-archive-controls .ema-brand { display: grid; place-items: center; width: 40px; height: 40px; flex: 0 0 auto; color: #fff; background: #ff0033; border-radius: 12px; }\n#em-local-archive-controls .ema-brand svg { width: 25px; height: 25px; }\n#em-local-archive-controls .ema-heading { flex: 1; min-width: 0; }\n#em-local-archive-controls h2 { font-size: 18px; font-weight: 600; line-height: 1.3; letter-spacing: -.2px; }\n#em-local-archive-controls .ema-subtitle { margin-top: 3px; color: #606060; font-size: 12px; }\n#em-local-archive-controls .ema-close { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 auto; border-radius: 50%; cursor: pointer; color: #606060; }\n#em-local-archive-controls .ema-close:hover:not(:disabled) { background: #f2f2f2; color: #0f0f0f; }\n#em-local-archive-controls .ema-close:disabled { opacity: .35; cursor: default; }\n#em-local-archive-controls .ema-body { padding: 20px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; min-height: 0; }\n#em-local-archive-controls .ema-section { padding: 0; }\n#em-local-archive-controls .ema-section-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }\n#em-local-archive-controls .ema-section-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; flex: 0 0 auto; background: #f2f2f2; }\n#em-local-archive-controls .ema-section-copy { flex: 1; min-width: 0; }\n#em-local-archive-controls h3 { font-size: 15px; font-weight: 600; line-height: 1.4; }\n#em-local-archive-controls .ema-description { margin-top: 3px; font-size: 12px; color: #606060; line-height: 1.5; }\n#em-local-archive-controls .ema-button { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 40px; padding: 10px 16px; border: 1px solid transparent; border-radius: 22px; background: #0f0f0f; color: #fff; font-size: 14px; line-height: 18px; font-weight: 500; cursor: pointer; transition: background .15s, border-color .15s; text-align: center; }\n#em-local-archive-controls .ema-button > svg { order: -1; width: 18px; height: 18px; }\n#em-local-archive-controls .ema-button:hover:not(:disabled) { background: #303030; }\n#em-local-archive-controls .ema-button:disabled { background: #f2f2f2; color: #909090; cursor: default; }\n#em-local-archive-controls .ema-button-secondary { background: #fff; border-color: #d9d9d9; color: #0f0f0f; }\n#em-local-archive-controls .ema-button-secondary:hover:not(:disabled) { background: #f2f2f2; border-color: #c6c6c6; }\n#em-local-archive-controls .ema-divider { height: 1px; border: 0; background: #e9e9e9; margin: 20px 0; }\n#em-local-archive-controls .ema-picker { position: relative; display: flex; align-items: center; gap: 12px; padding: 16px 14px; margin-bottom: 12px; background: #fafafa; border: 1px dashed #bdbdbd; border-radius: 12px; cursor: pointer; transition: background .15s, border-color .15s; }\n#em-local-archive-controls .ema-picker:hover:not([data-disabled=\"true\"]) { background: #f0f6ff; border-color: #065fd4; }\n#em-local-archive-controls .ema-picker[data-state=\"selected\"] { border-style: solid; border-color: #b8d4ef; background: #f5f9ff; }\n#em-local-archive-controls .ema-picker[data-state=\"error\"] { border-color: #c88e8e; }\n#em-local-archive-controls .ema-picker[data-disabled=\"true\"] { opacity: .55; cursor: default; }\n#em-local-archive-controls .ema-picker > svg { color: #065fd4; width: 24px; height: 24px; }\n#em-local-archive-controls .ema-picker-copy { min-width: 0; flex: 1; }\n#em-local-archive-controls .ema-file-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #065fd4; font-size: 13px; font-weight: 500; }\n#em-local-archive-controls .ema-file-hint { display: block; margin-top: 3px; color: #606060; font-size: 11px; line-height: 1.4; }\n#em-local-archive-controls .ema-file-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font: inherit; }\n#em-local-archive-controls .ema-file-input:disabled { cursor: default; }\n#em-local-archive-controls .ema-note { margin-top: 10px; color: #606060; font-size: 11px; text-align: center; }\n#em-local-archive-controls .ema-status { margin-top: 20px; padding: 14px; border: 1px solid #e9e9e9; border-radius: 12px; background: #f8f8f8; }\n#em-local-archive-controls .ema-status-heading { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; font-size: 13px; font-weight: 500; }\n#em-local-archive-controls .ema-status-mark { display: grid; place-items: center; width: 16px; height: 16px; flex: 0 0 auto; border: 1.5px solid currentColor; border-radius: 50%; color: #606060; font: 600 10px/1 Arial, sans-serif; }\n#em-local-archive-controls .ema-result { color: #606060; font-size: 12px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }\n#em-local-archive-controls .ema-time { margin-top: 7px; color: #606060; font-size: 11px; font-variant-numeric: tabular-nums; }\n#em-local-archive-controls .ema-time:empty { display: none; }\n#em-local-archive-controls .ema-status[data-state=\"working\"] { border-color: #d6e6f7; background: #f5f9ff; }\n#em-local-archive-controls .ema-status[data-state=\"working\"] .ema-status-mark { border-color: #c7dcf4; border-top-color: #065fd4; animation: ema-spin .9s linear infinite; }\n#em-local-archive-controls .ema-status[data-state=\"success\"] { border-color: #d2e7db; background: #f3faf6; }\n#em-local-archive-controls .ema-status[data-state=\"success\"] .ema-status-mark { color: #137333; }\n#em-local-archive-controls .ema-status[data-state=\"error\"] { border-color: #f0d5d5; background: #fff7f7; }\n#em-local-archive-controls .ema-status[data-state=\"error\"] .ema-status-mark { color: #b3261e; }\n#em-local-archive-controls .ema-status .ema-button { margin-top: 12px; min-height: 36px; padding: 8px 14px; font-size: 13px; }\n#em-local-archive-controls .ema-details { margin-top: 14px; color: #606060; font-size: 12px; }\n#em-local-archive-controls .ema-details summary { width: fit-content; border-radius: 3px; cursor: pointer; font-weight: 500; }\n#em-local-archive-controls .ema-details pre { margin-top: 10px; max-height: 180px; overflow: auto; padding: 12px; border-radius: 8px; background: #f8f8f8; color: #454545; white-space: pre-wrap; overflow-wrap: anywhere; font: 11px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; }\n#em-local-archive-controls .ema-log { margin-top: 10px; color: #065fd4; cursor: pointer; font-size: 12px; font-weight: 500; border-radius: 3px; }\n#em-local-archive-controls .ema-log:hover { text-decoration: underline; }\n#em-local-archive-controls .ema-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px; border-top: 1px solid #ededed; background: #fafafa; color: #606060; font-size: 10px; flex: 0 0 auto; }\n#em-local-archive-controls .ema-footer span:first-child { display: flex; align-items: center; gap: 5px; }\n#em-local-archive-controls .ema-footer svg { width: 13px; height: 13px; }\n#em-local-archive-controls[data-surface=\"side-panel\"] { inset: 0; width: 100%; max-width: none; height: 100vh; height: 100dvh; max-height: none; border: 0; border-radius: 0; box-shadow: none; }\n#em-local-archive-controls .ema-tabs { display: flex; gap: 4px; padding: 4px; margin-bottom: 20px; background: #f2f2f2; border-radius: 10px; }\n#em-local-archive-controls .ema-tab { flex: 1; padding: 8px 4px; border-radius: 7px; color: #606060; cursor: pointer; font-size: 12px; font-weight: 500; text-align: center; }\n#em-local-archive-controls .ema-tab[aria-selected=\"true\"] { color: #0f0f0f; background: #fff; box-shadow: 0 1px 3px #0001; }\n#em-local-archive-controls .ema-gh-connect > .ema-button { margin-top: 18px; }\n#em-local-archive-controls .ema-gh-field { display: flex; flex-direction: column; gap: 5px; margin: 14px 0 10px; color: #454545; font-size: 12px; }\n#em-local-archive-controls .ema-gh-field :is(input,select) { box-sizing: border-box; width: 100%; min-width: 0; height: 38px; padding: 8px 10px; color: #0f0f0f; background: #fff; border: 1px solid #ccc; border-radius: 8px; font: 13px Roboto, Arial, sans-serif; }\n#em-local-archive-controls .ema-gh-field :is(input,select):disabled { color: #909090; background: #f8f8f8; }\n#em-local-archive-controls .ema-gh-field select:focus-visible { outline: 2px solid #065fd4; outline-offset: 2px; }\n#em-local-archive-controls .ema-gh-link { display: inline-block; margin-top: 8px; color: #065fd4; font-size: 12px; text-decoration: none; }\n#em-local-archive-controls .ema-gh-link:hover { text-decoration: underline; }\n#em-local-archive-controls .ema-gh-repository-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; margin-top: -4px; }\n#em-local-archive-controls .ema-gh-repository-actions :is(a,button) { display: inline-flex; align-items: center; min-height: 32px; margin-top: 0; }\n#em-local-archive-controls .ema-gh-text-button { color: #065fd4; font-size: 12px; font-weight: 500; cursor: pointer; border-radius: 3px; }\n#em-local-archive-controls .ema-gh-text-button:disabled { color: #909090; cursor: default; }\n#em-local-archive-controls .ema-gh-text-button:hover:not(:disabled) { text-decoration: underline; }\n#em-local-archive-controls .ema-gh-account { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 18px; padding: 12px; color: #137333; background: #f3faf6; border: 1px solid #d2e7db; border-radius: 10px; font-size: 12px; }\n#em-local-archive-controls .ema-gh-account > span { min-width: 0; overflow-wrap: anywhere; }\n#em-local-archive-controls .ema-gh-account button { flex: 0 0 auto; }\n#em-local-archive-controls .ema-gh-connected > .ema-button { margin-top: 12px; }\n#em-local-archive-controls .ema-gh-actions { display: flex; gap: 8px; margin-top: 12px; }\n#em-local-archive-controls .ema-gh-actions .ema-button { flex: 1; padding: 10px 8px; min-width: 0; }\n#em-local-archive-controls .ema-gh-public { display: flex; align-items: flex-start; gap: 8px; margin: 12px 0; padding: 12px; background: #fff8e8; border-radius: 8px; font-size: 12px; }\n#em-local-archive-controls .ema-gh-public input { margin: 3px 0 0; accent-color: #065fd4; }\n#em-local-archive-controls .ema-gh-path { margin-top: 12px; font-size: 11px; color: #606060; white-space: pre-wrap; overflow-wrap: anywhere; }\n#em-local-archive-controls .ema-gh-device { padding: 16px; margin-top: 16px; border: 1px solid #d6e6f7; border-radius: 12px; background: #f5f9ff; font-size: 13px; }\n#em-local-archive-controls .ema-gh-device code { display: block; padding: 14px 0 8px; color: #0f0f0f; font: 600 25px/1.2 ui-monospace, Consolas, monospace; letter-spacing: 2px; }\n#em-local-archive-controls .ema-gh-device .ema-button { margin: 12px 0 8px; font-size: 13px; }\n#em-local-archive-controls .ema-details[open] > .ema-description { margin-top: 10px; }\n@keyframes ema-spin { to { transform: rotate(360deg); } }\n@media (max-width: 440px) {\n  #em-local-archive-controls { top: 72px; right: 12px; max-width: calc(100vw - 24px); max-height: calc(100dvh - 84px); }\n  #em-local-archive-controls .ema-header { padding: 16px; gap: 10px; }\n  #em-local-archive-controls .ema-body { padding: 16px; }\n  #em-local-archive-controls .ema-footer { padding: 12px 16px; }\n  #em-local-archive-controls h2 { font-size: 17px; }\n  #em-local-archive-controls[data-surface=\"side-panel\"] { inset: 0; max-width: none; max-height: none; }\n}\n@media (prefers-reduced-motion: reduce) {\n  #em-local-archive-controls .ema-status-mark { animation: none !important; }\n  #em-local-archive-controls :is(.ema-button,.ema-picker) { transition: none; }\n}\n";
 const renderEditorPanel = function renderEditorPanel(invoke, options = {}) {
   const id = 'em-local-archive-controls';
   const previous = document.getElementById(id);
   if (previous?.dataset.busy === 'true') {
-    if (previous.dataset.version !== '0.4.1' && !previous.querySelector?.('[data-upgrade-notice]')) {
+    if (previous.dataset.version !== '0.4.2' && !previous.querySelector?.('[data-upgrade-notice]')) {
       const notice = document.createElement('p');
       notice.dataset.upgradeNotice = 'true';
-      notice.textContent = 'An older import is still running. Reload this editor before testing version 0.4.1.';
+      notice.textContent = 'An older import is still running. Reload this editor before testing version 0.4.2.';
       previous.append(notice);
       const reload = document.createElement('button');
       reload.type = 'button';
@@ -351,7 +380,7 @@ const renderEditorPanel = function renderEditorPanel(invoke, options = {}) {
   previous?.remove();
   const host = document.createElement('section');
   host.id = id;
-  host.dataset.version = '0.4.1';
+  host.dataset.version = '0.4.2';
   if (options.sidePanel) host.dataset.surface = 'side-panel';
   host.tabIndex = -1;
   host.setAttribute('role', 'dialog');
@@ -564,7 +593,7 @@ const renderEditorPanel = function renderEditorPanel(invoke, options = {}) {
   const local = add('span', undefined, footer);
   icon('computer', local);
   add('span', 'For YouTube Effect Maker', local);
-  add('span', 'Version 0.4.1', footer);
+  add('span', 'Version 0.4.2', footer);
   function setStatus(state, title) {
     status.dataset.state = state;
     statusTitle.textContent = title;

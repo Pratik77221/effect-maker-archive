@@ -60,3 +60,5 @@ The optional POSIX wrapper `./em-sync` uses the `node` executable on PATH. Unpac
 The bundled GitHub OAuth client ID is public; it is not a secret. A fork distributing its own GitHub integration should register its own OAuth app, enable Device Flow and update `GITHUB_CLIENT_ID` in `extension/github-auth.js`. Never add an OAuth client secret or a personal access token to extension files.
 
 Review the adapter against a changed editor contract before changing its build identifier. Keep token handling in the extension origin and update the [privacy declaration](../PRIVACY.md) when behavior changes.
+
+The [editor compatibility review](EDITOR-COMPATIBILITY.md) records both supported profiles and a reproducible offline check against separately downloaded Google clients. Run that check when changing the adapter as well as the ordinary test suite. It deliberately does not ship Google client code or call cloud endpoints.

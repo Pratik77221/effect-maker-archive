@@ -4,7 +4,7 @@ import { effectMakerOperation } from '../extension/adapter.js';
 import { digest, sourceDigest } from '../lib/archive.js';
 import { createOperationRuntime } from '../extension/runtime.js';
 
-import { BUILD, setup } from '../fixtures/editor-model.js';
+import { BUILD, CURRENT_BUILD, setup } from '../fixtures/editor-model.js';
 
 test('incompatible build and non-editor pages fail before model operations', async () => {
   setup({ build: 'unknown' });
@@ -24,6 +24,51 @@ test('source capture, preview and apply/save work with an arbitrary destination 
   const result = await effectMakerOperation('import', { archive, destinationId: 'destination', expectedSourceSha256: archive.sourceSha256, expectedDestinationSha256: preview.destinationSourceSha256 });
   assert.equal(result.status, 'saved-reload-required');
   assert.deepEqual(trace, [{ applyEffectSourceCommand: { effectSourceJspb: '[]', assetsJspb: [] } }, 'saved']);
+});
+
+test('current editor exports its actual build and imports a previous-build backup', async () => {
+  setup();
+  const previous = await effectMakerOperation('export');
+  previous.project.id = 'origin';
+  const { trace } = setup({ build: CURRENT_BUILD });
+  const current = await effectMakerOperation('export');
+  assert.equal(current.project.build, CURRENT_BUILD);
+  assert.equal((await effectMakerOperation('import', await restoreArguments(previous))).status, 'saved-reload-required');
+  assert.equal(trace.at(-1), 'saved');
+  current.project.id = 'origin';
+  assert.equal((await effectMakerOperation('import', await restoreArguments(current))).status, 'saved-reload-required');
+});
+
+test('unknown archive builds and downgrades refuse writes', async () => {
+  setup({ build: CURRENT_BUILD });
+  const archive = await effectMakerOperation('export');
+  archive.project.id = 'origin';
+  const { trace } = setup();
+  await assert.rejects(effectMakerOperation('preview-import', { archive }), /incompatible editor build/);
+  archive.project.build = 'unreviewed-build';
+  await assert.rejects(effectMakerOperation('preview-import', { archive }), /incompatible editor build/);
+  assert.deepEqual(trace, []);
+});
+
+test('a recognized build with missing renamed functions fails before model access', async () => {
+  const { ns, trace } = setup({ build: CURRENT_BUILD });
+  delete ns.Wwa;
+  await assert.rejects(effectMakerOperation('export'), /dependencies \(Wwa\)/);
+  assert.deepEqual(trace, []);
+});
+
+test('graph summary counts connections separately from variables and protects variable-only projects', async () => {
+  const { ns, trace } = setup();
+  ns.uM = () => ({ Lb: () => new Map([['node', {}]]), v: () => [{}] });
+  ns.ky = () => new Map([['input', {}]]);
+  ns.lM = () => [{}, {}];
+  const archive = await effectMakerOperation('export');
+  assert.equal(archive.summary.graphEdges, 2);
+  assert.equal(archive.summary.graphVariables, 1);
+  archive.project.id = 'origin';
+  ns.uM = () => ({ Lb: () => new Map(), v: () => [{}] });
+  await assert.rejects(effectMakerOperation('preview-import', { archive }), /not empty/);
+  assert.deepEqual(trace, []);
 });
 
 test('same-project, occupied destination and changed preview refuse writes', async () => {

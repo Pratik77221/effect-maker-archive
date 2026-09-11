@@ -159,7 +159,7 @@ test('saving errors show progress, offer a reload and export a diagnostic withou
   const diagnostic = await (await fetch(ui.downloads[0].href)).json();
   URL.revokeObjectURL(ui.downloads[0].href);
   assert.equal(diagnostic.error.stage, 'save');
-  assert.equal(diagnostic.extensionVersion, '0.4.1');
+  assert.equal(diagnostic.extensionVersion, '0.4.2');
   assert.equal(diagnostic.source, undefined);
   assert.equal(diagnostic.assets, undefined);
 });

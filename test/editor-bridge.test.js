@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { runInThisContext } from 'node:vm';
-import { setup } from '../fixtures/editor-model.js';
+import { setup, BUILD, CURRENT_BUILD } from '../fixtures/editor-model.js';
 import { createOperationRuntime } from '../extension/runtime.js';
 import { createEditorBridge } from '../extension/editor-bridge.js';
 
-function environment(t) {
-  const model = setup();
+function environment(t, options) {
+  const model = setup(options);
   globalThis.location.origin='https://effects.youtube.com';
   globalThis.document.getElementById=()=>null;
   const timeout=globalThis.setTimeout;
@@ -26,8 +26,8 @@ function environment(t) {
   return {...model,calls,api,bridge:createEditorBridge({tabId:42,projectId:'destination'},api)};
 }
 
-test('the serialized editor bridge exports, validates, applies and saves without a page message channel',async t=>{
-  const {bridge,calls,trace}=environment(t);
+for (const build of [BUILD, CURRENT_BUILD]) test('the serialized editor bridge exports, validates, applies and saves on ' + build,async t=>{
+  const {bridge,calls,trace}=environment(t, { build });
   async function invoke(operation,input={}) {
     const task=createOperationRuntime({operation});
     try{return await bridge.invoke(operation,input,task);}finally{task.finish();}

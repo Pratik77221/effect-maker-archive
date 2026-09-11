@@ -16,7 +16,9 @@ The requested OAuth scope is **repo**, which includes private repositories. GitH
 
 ## Create a backup repository
 
-Create a GitHub repository you can write to. A private repository is usually appropriate for unpublished effect content. Initialize it with a README so it has an existing default branch, then choose **Refresh repositories & backups** in the extension.
+Click **Create a repository** beside **Refresh repositories**, directly below the repository selector. A private repository is usually appropriate for unpublished effect content. Initialize it with a README so it has an existing default branch, then return to the extension. The list refreshes automatically after you return from this link.
+
+If you created a repository elsewhere, click **Refresh repositories**. This reloads repositories and the selected repository's branches, backups and history using your existing sign-in. It keeps your selected repository, branch, backup and revision when they are still available. Disconnecting and signing in again is unnecessary. If a refresh fails, retry the button; a temporary network failure does not remove your sign-in.
 
 Your effects do not need to be backed up to this extension's source-code repository. Select a repository intended for your own project archives.
 

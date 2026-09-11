@@ -100,6 +100,8 @@ export const panelStyles = `
 #em-local-archive-controls .ema-gh-field select:focus-visible { outline: 2px solid #065fd4; outline-offset: 2px; }
 #em-local-archive-controls .ema-gh-link { display: inline-block; margin-top: 8px; color: #065fd4; font-size: 12px; text-decoration: none; }
 #em-local-archive-controls .ema-gh-link:hover { text-decoration: underline; }
+#em-local-archive-controls .ema-gh-repository-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; margin-top: -4px; }
+#em-local-archive-controls .ema-gh-repository-actions :is(a,button) { display: inline-flex; align-items: center; min-height: 32px; margin-top: 0; }
 #em-local-archive-controls .ema-gh-text-button { color: #065fd4; font-size: 12px; font-weight: 500; cursor: pointer; border-radius: 3px; }
 #em-local-archive-controls .ema-gh-text-button:disabled { color: #909090; cursor: default; }
 #em-local-archive-controls .ema-gh-text-button:hover:not(:disabled) { text-decoration: underline; }

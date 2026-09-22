@@ -61,4 +61,4 @@ The bundled GitHub OAuth client ID is public; it is not a secret. A fork distrib
 
 Review the adapter against a changed editor contract before changing its build identifier. Keep token handling in the extension origin and update the [privacy declaration](../PRIVACY.md) when behavior changes.
 
-The [editor compatibility review](EDITOR-COMPATIBILITY.md) records both supported profiles and a reproducible offline check against separately downloaded Google clients. Run that check when changing the adapter as well as the ordinary test suite. It deliberately does not ship Google client code or call cloud endpoints.
+The [editor compatibility review](EDITOR-COMPATIBILITY.md) records all three supported profiles and a reproducible offline check against separately downloaded Google clients. Run that check when changing the adapter as well as the ordinary test suite. It deliberately does not ship Google client code or call cloud endpoints.

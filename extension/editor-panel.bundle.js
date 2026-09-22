@@ -13,7 +13,7 @@ const createOperationRuntime = function createOperationRuntime(options = {}) {
   let current = { stage: 'prepare', message: 'Preparing…', startedAt: started, limitMs: limits.total };
   const events = [];
   const snapshot = () => ({
-    extensionVersion: '0.4.2', operation: options.operation ?? 'project operation',
+    extensionVersion: '0.4.3', operation: options.operation ?? 'project operation',
     startedAt: new Date(started).toISOString(), elapsedMs: Date.now() - started,
     stage: current.stage, message: current.message, stageElapsedMs: Date.now() - current.startedAt,
     stageLimitMs: current.limitMs, totalLimitMs: limits.total, writesStarted,
@@ -109,9 +109,10 @@ const operation = async function effectMakerOperation(operation, input = {}, run
   try {
     runtime.check();
     // Reviewed against the actual served clients; minified names are build-specific.
-    // Keep the previous profile for tabs that were already open during a rollout.
+    // Keep reviewed profiles for older backups and tabs still open during a rollout.
     const previousBuild = 'effectmaker.effectmaker.en_GB.k9eBOpQ9YWc.2020.O';
-    const currentBuild = 'effectmaker.effectmaker.en_GB.gfHrZWkok9A.2020.O';
+    const september11Build = 'effectmaker.effectmaker.en_GB.gfHrZWkok9A.2020.O';
+    const currentBuild = 'effectmaker.effectmaker.en_GB.JjyImd5Sung.2020.O';
     const profiles = {
       [previousBuild]: {
         symbols: {
@@ -124,7 +125,7 @@ const operation = async function effectMakerOperation(operation, input = {}, run
         projectId: 'sb', title: 'yf', channelId: 'Ke', children: 'Cb', uploadProject: 'Td',
         accepts: [previousBuild]
       },
-      [currentBuild]: {
+      [september11Build]: {
         symbols: {
           injector: 'I', Model: 'gC', Source: 'WC', message: 'Ho', Scene: 'KC', objects: 'iM',
           assetTree: 'rM', assets: 'uy', graph: 'sM', subgraphs: 'Fx', dependencies: 'Wwa',
@@ -133,7 +134,18 @@ const operation = async function effectMakerOperation(operation, input = {}, run
           sequence: 'wy', setStrings: 'jG', frameIds: 'vy', nodeInputs: 'iy', inputLinks: 'jM'
         },
         projectId: 'mb', title: 'xf', channelId: 'Kd', children: 'Db', uploadProject: 'Ud',
-        accepts: [previousBuild, currentBuild]
+        accepts: [previousBuild, september11Build]
+      },
+      [currentBuild]: {
+        symbols: {
+          injector: 'K', Model: 'lC', Source: 'aD', message: 'Jo', Scene: 'PC', objects: 'kM',
+          assetTree: 'tM', assets: 'yy', graph: 'uM', subgraphs: 'Jx', dependencies: 'bxa',
+          AssetService: 'DA', assetUrl: 'FA', markJson: 'id', Command: 'Ws', dispatch: 'EQ', upload: 'tS',
+          imageId: 'By', setImageId: 'pxa', glb: 'Fy', glbId: 'Ey', setGlbId: 'uxa',
+          sequence: 'Ay', setStrings: 'nG', frameIds: 'zy', nodeInputs: 'my', inputLinks: 'lM'
+        },
+        projectId: 'nb', title: 'wf', channelId: 'Ld', children: 'Ab', uploadProject: 'Vd',
+        accepts: [previousBuild, september11Build, currentBuild]
       }
     };
     const FORMAT = 'effect-maker-source-archive';
@@ -253,7 +265,7 @@ const operation = async function effectMakerOperation(operation, input = {}, run
       if (destination.objects.length || destination.assets.length || destination.graphNodes || destination.graphEdges || destination.graphVariables || destination.subgraphs) fail('Destination is not empty.');
       if (model.ha.value !== 0) fail('Destination is still saving.');
       requireFunctions(['markJson', 'dispatch']);
-      // Match the editor's native JSON parser (Um): mark JSON arrays before parsing.
+      // Match the editor's native JSON parser: mark JSON arrays before parsing.
       const sourceData = clone(archive.source);
       api.markJson(sourceData, 32);
       const source = new api.Source(sourceData);
@@ -363,10 +375,10 @@ const renderEditorPanel = function renderEditorPanel(invoke, options = {}) {
   const id = 'em-local-archive-controls';
   const previous = document.getElementById(id);
   if (previous?.dataset.busy === 'true') {
-    if (previous.dataset.version !== '0.4.2' && !previous.querySelector?.('[data-upgrade-notice]')) {
+    if (previous.dataset.version !== '0.4.3' && !previous.querySelector?.('[data-upgrade-notice]')) {
       const notice = document.createElement('p');
       notice.dataset.upgradeNotice = 'true';
-      notice.textContent = 'An older import is still running. Reload this editor before testing version 0.4.2.';
+      notice.textContent = 'An older import is still running. Reload this editor before testing version 0.4.3.';
       previous.append(notice);
       const reload = document.createElement('button');
       reload.type = 'button';
@@ -380,7 +392,7 @@ const renderEditorPanel = function renderEditorPanel(invoke, options = {}) {
   previous?.remove();
   const host = document.createElement('section');
   host.id = id;
-  host.dataset.version = '0.4.2';
+  host.dataset.version = '0.4.3';
   if (options.sidePanel) host.dataset.surface = 'side-panel';
   host.tabIndex = -1;
   host.setAttribute('role', 'dialog');
@@ -593,7 +605,7 @@ const renderEditorPanel = function renderEditorPanel(invoke, options = {}) {
   const local = add('span', undefined, footer);
   icon('computer', local);
   add('span', 'For YouTube Effect Maker', local);
-  add('span', 'Version 0.4.2', footer);
+  add('span', 'Version 0.4.3', footer);
   function setStatus(state, title) {
     status.dataset.state = state;
     statusTitle.textContent = title;

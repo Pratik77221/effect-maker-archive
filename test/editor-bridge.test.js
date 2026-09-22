@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { runInThisContext } from 'node:vm';
-import { setup, BUILD, CURRENT_BUILD } from '../fixtures/editor-model.js';
+import { setup, REVIEWED_BUILDS } from '../fixtures/editor-model.js';
 import { createOperationRuntime } from '../extension/runtime.js';
 import { createEditorBridge } from '../extension/editor-bridge.js';
 
@@ -26,7 +26,7 @@ function environment(t, options) {
   return {...model,calls,api,bridge:createEditorBridge({tabId:42,projectId:'destination'},api)};
 }
 
-for (const build of [BUILD, CURRENT_BUILD]) test('the serialized editor bridge exports, validates, applies and saves on ' + build,async t=>{
+for (const build of REVIEWED_BUILDS) test('the serialized editor bridge exports, validates, applies and saves on ' + build,async t=>{
   const {bridge,calls,trace}=environment(t, { build });
   async function invoke(operation,input={}) {
     const task=createOperationRuntime({operation});

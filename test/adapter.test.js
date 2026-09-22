@@ -4,7 +4,7 @@ import { effectMakerOperation } from '../extension/adapter.js';
 import { digest, sourceDigest } from '../lib/archive.js';
 import { createOperationRuntime } from '../extension/runtime.js';
 
-import { BUILD, CURRENT_BUILD, setup } from '../fixtures/editor-model.js';
+import { BUILD, SEPTEMBER_11_BUILD, CURRENT_BUILD, REVIEWED_BUILDS, setup } from '../fixtures/editor-model.js';
 
 test('incompatible build and non-editor pages fail before model operations', async () => {
   setup({ build: 'unknown' });
@@ -26,34 +26,41 @@ test('source capture, preview and apply/save work with an arbitrary destination 
   assert.deepEqual(trace, [{ applyEffectSourceCommand: { effectSourceJspb: '[]', assetsJspb: [] } }, 'saved']);
 });
 
-test('current editor exports its actual build and imports a previous-build backup', async () => {
-  setup();
-  const previous = await effectMakerOperation('export');
-  previous.project.id = 'origin';
-  const { trace } = setup({ build: CURRENT_BUILD });
-  const current = await effectMakerOperation('export');
-  assert.equal(current.project.build, CURRENT_BUILD);
-  assert.equal((await effectMakerOperation('import', await restoreArguments(previous))).status, 'saved-reload-required');
-  assert.equal(trace.at(-1), 'saved');
-  current.project.id = 'origin';
-  assert.equal((await effectMakerOperation('import', await restoreArguments(current))).status, 'saved-reload-required');
-});
+for (const [fromIndex, from] of REVIEWED_BUILDS.entries()) {
+  for (const to of REVIEWED_BUILDS.slice(fromIndex)) {
+    test('reviewed backup imports from ' + from + ' into ' + to, async () => {
+      setup({ build: from });
+      const archive = await effectMakerOperation('export');
+      assert.equal(archive.project.build, from);
+      archive.project.id = 'origin';
+      const { trace } = setup({ build: to });
+      assert.equal((await effectMakerOperation('import', await restoreArguments(archive))).status, 'saved-reload-required');
+      assert.equal(trace.at(-1), 'saved');
+    });
+  }
+}
 
 test('unknown archive builds and downgrades refuse writes', async () => {
-  setup({ build: CURRENT_BUILD });
-  const archive = await effectMakerOperation('export');
-  archive.project.id = 'origin';
-  const { trace } = setup();
-  await assert.rejects(effectMakerOperation('preview-import', { archive }), /incompatible editor build/);
-  archive.project.build = 'unreviewed-build';
-  await assert.rejects(effectMakerOperation('preview-import', { archive }), /incompatible editor build/);
-  assert.deepEqual(trace, []);
+  for (const [fromIndex, from] of REVIEWED_BUILDS.entries()) {
+    setup({ build: from });
+    const archive = await effectMakerOperation('export');
+    archive.project.id = 'origin';
+    for (const to of REVIEWED_BUILDS.slice(0, fromIndex)) {
+      const { trace } = setup({ build: to });
+      await assert.rejects(effectMakerOperation('preview-import', { archive }), /incompatible editor build/);
+      assert.deepEqual(trace, []);
+    }
+    const { trace } = setup({ build: from });
+    archive.project.build = 'unreviewed-build';
+    await assert.rejects(effectMakerOperation('preview-import', { archive }), /incompatible editor build/);
+    assert.deepEqual(trace, []);
+  }
 });
 
-test('a recognized build with missing renamed functions fails before model access', async () => {
-  const { ns, trace } = setup({ build: CURRENT_BUILD });
-  delete ns.Wwa;
-  await assert.rejects(effectMakerOperation('export'), /dependencies \(Wwa\)/);
+for (const [build, dependency] of [[SEPTEMBER_11_BUILD, 'Wwa'], [CURRENT_BUILD, 'bxa']]) test('missing renamed functions refuse writes on ' + build, async () => {
+  const { ns, trace } = setup({ build });
+  delete ns[dependency];
+  await assert.rejects(effectMakerOperation('export'), new RegExp('dependencies \\(' + dependency + '\\)'));
   assert.deepEqual(trace, []);
 });
 

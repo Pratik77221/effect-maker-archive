@@ -9,13 +9,13 @@
 ## Install the release ZIP
 
 1. Visit the [latest release](https://github.com/Pratik77221/effect-maker-archive/releases/latest).
-2. Under **Assets**, download `effect-maker-archive-v0.4.2.zip` and extract it.
+2. Under **Assets**, download `effect-maker-archive-v0.4.3.zip` and extract it.
 3. Keep the extracted folder in a permanent location. Chrome loads an unpacked extension from this folder.
 4. Open `chrome://extensions` in Chrome.
 5. Enable **Developer mode**, then click **Load unpacked**.
 6. Select the extracted folder containing `manifest.json`.
 7. Use Chrome's Extensions menu to pin **Effect Maker Archive**, if desired.
-8. Open an Effect Maker project and click the extension icon. The controls should show **Version 0.4.2**.
+8. Open an Effect Maker project and click the extension icon. The controls should show **Version 0.4.3**.
 
 These are Chrome's standard [unpacked-extension installation steps](https://developer.chrome.com/docs/extensions/get-started/tutorial/hello-world#load-unpacked). This distribution is a GitHub release, not a Chrome Web Store installation.
 

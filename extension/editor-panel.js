@@ -15,10 +15,10 @@ export function renderEditorPanel(invoke, options = {}) {
   const id = 'em-local-archive-controls';
   const previous = document.getElementById(id);
   if (previous?.dataset.busy === 'true') {
-    if (previous.dataset.version !== '0.4.2' && !previous.querySelector?.('[data-upgrade-notice]')) {
+    if (previous.dataset.version !== '0.4.3' && !previous.querySelector?.('[data-upgrade-notice]')) {
       const notice = document.createElement('p');
       notice.dataset.upgradeNotice = 'true';
-      notice.textContent = 'An older import is still running. Reload this editor before testing version 0.4.2.';
+      notice.textContent = 'An older import is still running. Reload this editor before testing version 0.4.3.';
       previous.append(notice);
       const reload = document.createElement('button');
       reload.type = 'button';
@@ -32,7 +32,7 @@ export function renderEditorPanel(invoke, options = {}) {
   previous?.remove();
   const host = document.createElement('section');
   host.id = id;
-  host.dataset.version = '0.4.2';
+  host.dataset.version = '0.4.3';
   if (options.sidePanel) host.dataset.surface = 'side-panel';
   host.tabIndex = -1;
   host.setAttribute('role', 'dialog');
@@ -245,7 +245,7 @@ export function renderEditorPanel(invoke, options = {}) {
   const local = add('span', undefined, footer);
   icon('computer', local);
   add('span', 'For YouTube Effect Maker', local);
-  add('span', 'Version 0.4.2', footer);
+  add('span', 'Version 0.4.3', footer);
   function setStatus(state, title) {
     status.dataset.state = state;
     statusTitle.textContent = title;

@@ -8,11 +8,16 @@ import { effectMakerOperation } from '../extension/adapter.js';
 
 const clients = [
   { build: 'effectmaker.effectmaker.en_GB.k9eBOpQ9YWc.2020.O', sha256: 'f5ce71f0d7c60850b458033b069b6642798c8014acfd67a4f75b54f571ebd611',
-    Model: 'hC', Project: 'NC', Source: 'XC', Record: 'GL', Apply: 'SZa', dispatch: 'FQ', AssetService: 'zA', upload: 'tS', uploadProject: 'Td', dependencies: 'Vwa' },
+    Model: 'hC', Project: 'NC', Source: 'XC', Record: 'GL', Apply: 'SZa', dispatch: 'FQ', AssetService: 'zA', upload: 'tS', uploadProject: 'Td', dependencies: 'Vwa',
+    injector: 'I', Command: 'Vs', config: 'cn', handlers: 'ea', message: 'Ho' },
   { build: 'effectmaker.effectmaker.en_GB.gfHrZWkok9A.2020.O', sha256: 'ff8ee50a8ca67647f3b99049b9247852b13b1a29e54d280f96d91111bb7c706c',
-    Model: 'gC', Project: 'MC', Source: 'WC', Record: 'EL', Apply: 'QZa', dispatch: 'CQ', AssetService: 'yA', upload: 'qS', uploadProject: 'Ud', dependencies: 'Wwa' }
+    Model: 'gC', Project: 'MC', Source: 'WC', Record: 'EL', Apply: 'QZa', dispatch: 'CQ', AssetService: 'yA', upload: 'qS', uploadProject: 'Ud', dependencies: 'Wwa',
+    injector: 'I', Command: 'Vs', config: 'cn', handlers: 'ea', message: 'Ho' },
+  { build: 'effectmaker.effectmaker.en_GB.JjyImd5Sung.2020.O', sha256: '767c7f62dcb557060c2907a320496ef16f864548c16076f6d6820dc7ea4260ce',
+    Model: 'lC', Project: 'RC', Source: 'aD', Record: 'GL', Apply: 'RZa', dispatch: 'EQ', AssetService: 'DA', upload: 'tS', uploadProject: 'Vd', dependencies: 'bxa',
+    injector: 'K', Command: 'Ws', config: 'en', handlers: 'ga', message: 'Jo' }
 ];
-if (process.argv.length !== 4) throw new Error('Usage: node scripts/check-editor-contract.js <previous-client.js> <current-client.js>');
+if (process.argv.length !== clients.length + 2) throw new Error('Usage: node scripts/check-editor-contract.js <k9eBOpQ9YWc-client.js> <gfHrZWkok9A-client.js> <JjyImd5Sung-client.js>');
 
 async function loadClient(filename, profile) {
   const code = await readFile(filename, 'utf8');
@@ -86,15 +91,15 @@ function install({ profile, ns }, projectId, source = []) {
   // Native source application and dispatcher, with cloud save/transfer mocked.
   model.save = async () => { trace.push('saved'); model.ha.next(0); };
   const apply = new ns.archiveContractApply(model);
-  const handler = { ha: true, ea: [], ba: { applyEffectSourceCommand: () => ({ resolve: command => apply.resolveCommand(command) }) },
+  const handler = { ha: true, [profile.handlers]: [], ba: { applyEffectSourceCommand: () => ({ resolve: command => apply.resolveCommand(command) }) },
     resolveCommand: command => ns[profile.dispatch](handler, command).handled };
   const service = { channelId: 'channel-' + projectId, [profile.uploadProject]: projectId };
-  ns.I = () => ({ resolve: token => token === ns[profile.Model] ? model : token === ns.Vs ? handler : token === ns[profile.AssetService] ? service : undefined });
-  ns.cn = (_, fallback) => fallback;
+  ns[profile.injector] = () => ({ resolve: token => token === ns[profile.Model] ? model : token === ns[profile.Command] ? handler : token === ns[profile.AssetService] ? service : undefined });
+  ns[profile.config] = (_, fallback) => fallback;
   ns[profile.upload] = async (_, file, options) => {
     assert.equal(options.channelId, 'channel-' + projectId);
     assert.equal(options[profile.uploadProject], projectId);
-    assert.equal(Object.hasOwn(options, profile.uploadProject === 'Ud' ? 'Td' : 'Ud'), false);
+    for (const other of clients) if (other.uploadProject !== profile.uploadProject) assert.equal(Object.hasOwn(options, other.uploadProject), false);
     const id = 'new-binary-' + trace.length;
     const bytes = Buffer.from(await file.arrayBuffer());
     trace.push({ id, bytes });
@@ -109,7 +114,8 @@ function install({ profile, ns }, projectId, source = []) {
 const loaded = await Promise.all(clients.map((profile, index) => loadClient(process.argv[index + 2], profile)));
 const originalFetch = globalThis.fetch;
 try {
-  for (const [from, to] of [[0, 0], [0, 1], [1, 1]]) {
+  const roundTrips = clients.flatMap((_, from) => clients.slice(from).map((_, offset) => [from, from + offset]));
+  for (const [from, to] of roundTrips) {
     const source = install(loaded[from], 'origin', sourceFixture());
     const binaries = new Map([['old-image', 'image/png'], ['old-frame', 'image/png'], ['old-model', 'model/gltf-binary']].map(([id, mime]) => [id, { mime, bytes: Buffer.from(id + '-bytes') }]));
     for (const [id, { mime, bytes }] of binaries) source.model.ba.value.set(id, source.parse(loaded[from].ns[clients[from].Record], [id, [id, 'channel-origin'], null, [mime, bytes.length]]));
@@ -137,7 +143,7 @@ try {
     assert.deepEqual(restored.objects, archive.summary.objects);
     assert.equal(restored.graphNodes, 3);
     assert.equal(restored.graphEdges, 1);
-    const restoredSource = loaded[to].ns.Ho(destination.model.v, loaded[to].ns[clients[to].Source], 4);
+    const restoredSource = loaded[to].ns[clients[to].message](destination.model.v, loaded[to].ns[clients[to].Source], 4);
     const actual = JSON.parse(JSON.stringify(restoredSource.toJSON()));
     const expected = structuredClone(archive.source);
     const remapped = new Map(result.remappedAssets.map(({ oldId, newId }) => [oldId, newId]));
@@ -147,7 +153,7 @@ try {
     assets.get('model-object')[7][6] = remapped.get('old-model');
     assert.deepEqual(actual, expected, 'Only binary references change; graph, AI prompts, object IDs and fields survive.');
     assert.equal(JSON.stringify(Array.from(destination.model.ba.value.values(), record => record.toJSON())).includes('channel-origin'), false);
-    console.log('PASS native client export/import:', from === 0 ? 'previous' : 'current', '→', to === 0 ? 'previous' : 'current');
+    console.log('PASS native client export/import:', clients[from].build, '→', clients[to].build);
   }
 } finally { globalThis.fetch = originalFetch; }
 console.log('Offline contract checks passed. Cloud transfer/save and AI execution were not exercised.');

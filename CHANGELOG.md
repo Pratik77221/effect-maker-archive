@@ -1,5 +1,13 @@
 # Release notes
 
+## 0.4.3 — 22 September 2026
+
+- Support the new `JjyImd5Sung` English UK editor build after reviewing its served client code. Update the injector, message accessor, model, graph, asset, command and explicit destination-upload mappings.
+- Keep both earlier editor profiles and accept backups from `k9eBOpQ9YWc` and `gfHrZWkok9A` in the current editor. Unknown builds and unreviewed downgrades remain blocked.
+- Extend regression coverage to all six supported import combinations and serialized extension execution on all three builds. Update the reproducible native-client checker and compatibility documentation.
+
+Validation includes **82 passing automated tests** and **six offline round trips** using the actual reviewed Google clients. Native serialization, reference remapping and source application are exercised; cloud transfers/save and AI execution are not live-tested in this update. Extension permissions and data handling are unchanged. See [verification](docs/VERIFICATION.md).
+
 ## 0.4.2 — 11 September 2026
 
 - Support the new `gfHrZWkok9A` English UK editor build with reviewed function mappings, project accessors and destination upload fields. Retain the prior build profile for already-open tabs.

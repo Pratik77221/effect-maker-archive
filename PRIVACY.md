@@ -1,6 +1,6 @@
 # Privacy declaration
 
-**Effect Maker Archive · version 0.4.3 · effective 22 September 2026**
+**Effect Maker Archive · version 0.4.4 · effective 22 September 2026**
 
 Maintained by [Pratik77221](https://github.com/Pratik77221). This declaration describes the extension distributed from [this repository](https://github.com/Pratik77221/effect-maker-archive), including its optional GitHub connection and local CLI.
 

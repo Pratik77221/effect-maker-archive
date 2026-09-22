@@ -1,6 +1,7 @@
 // Included in the static editor bundle. No requests, editor access or credentials.
 export function createOperationRuntime(options = {}) {
-  const defaults = { total: 180000, validation: 30000, download: 30000, upload: 90000, apply: 20000, save: 60000, file: 15000, auth: 180000 };
+  // Limit individual steps, not the sum of all asset transfers in a project.
+  const defaults = { validation: 30000, download: 30000, upload: 90000, apply: 20000, save: 60000, file: 15000, auth: 180000 };
   const limits = Object.fromEntries(Object.entries(defaults).map(([name, value]) => {
     const override = options.limits?.[name];
     return [name, Number.isFinite(override) && override > 0 ? Math.min(value, override) : value];
@@ -9,13 +10,13 @@ export function createOperationRuntime(options = {}) {
   const started = Date.now();
   let finished = false;
   let writesStarted = false;
-  let current = { stage: 'prepare', message: 'Preparing…', startedAt: started, limitMs: limits.total };
+  let current = { stage: 'prepare', message: 'Preparing…', startedAt: started, limitMs: null };
   const events = [];
   const snapshot = () => ({
-    extensionVersion: '0.4.3', operation: options.operation ?? 'project operation',
+    extensionVersion: '0.4.4', operation: options.operation ?? 'project operation',
     startedAt: new Date(started).toISOString(), elapsedMs: Date.now() - started,
     stage: current.stage, message: current.message, stageElapsedMs: Date.now() - current.startedAt,
-    stageLimitMs: current.limitMs, totalLimitMs: limits.total, writesStarted,
+    stageLimitMs: current.limitMs, totalLimitMs: null, writesStarted,
     events: events.map(event => ({ ...event }))
   });
   const notify = () => { try { options.onProgress?.({ ...snapshot(), ...current }); } catch {} };
@@ -27,7 +28,6 @@ export function createOperationRuntime(options = {}) {
   function stop(error) {
     if (!controller.signal.aborted && !finished) controller.abort(error);
   }
-  const totalTimer = setTimeout(() => stop(makeError('The operation exceeded its 3-minute time limit.', 'TIMEOUT')), limits.total);
   const check = () => {
     if (controller.signal.aborted) throw controller.signal.reason;
     if (finished) throw makeError('This operation has already ended.', 'OPERATION_ENDED');
@@ -48,7 +48,7 @@ export function createOperationRuntime(options = {}) {
   }
   async function wait(stage, message, work, metadata = {}) {
     check();
-    const limitMs = Math.min(limits[stage] ?? limits.validation, Math.max(1, limits.total - (Date.now() - started)));
+    const limitMs = limits[stage] ?? limits.validation;
     current = { ...metadata, stage, message, startedAt: Date.now(), limitMs };
     events.push({ stage, message, atMs: Date.now() - started, ...metadata });
     if (events.length > 100) events.shift();
@@ -88,7 +88,7 @@ export function createOperationRuntime(options = {}) {
     report(progress) {
       check();
       if (!progress || typeof progress.message !== 'string') return;
-      current = { stage: progress.stage, message: progress.message, startedAt: Date.now() - (progress.stageElapsedMs || 0), limitMs: progress.stageLimitMs || limits.total };
+      current = { stage: progress.stage, message: progress.message, startedAt: Date.now() - (progress.stageElapsedMs || 0), limitMs: progress.stageLimitMs ?? null };
       writesStarted ||= !!progress.writesStarted;
       if (Array.isArray(progress.events)) events.splice(0, events.length, ...progress.events.slice(-100));
       notify();
@@ -96,6 +96,6 @@ export function createOperationRuntime(options = {}) {
     get writesStarted() { return writesStarted; },
     markWrite() { check(); writesStarted = true; notify(); },
     cancel() { stop(makeError('Operation cancelled.', 'CANCELLED')); },
-    finish() { finished = true; clearTimeout(totalTimer); }
+    finish() { finished = true; }
   };
 }

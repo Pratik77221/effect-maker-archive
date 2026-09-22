@@ -25,7 +25,7 @@ The package script creates `dist/effect-maker-archive-v<version>.zip` and `dist/
 | Directory/file | Responsibility |
 | --- | --- |
 | `extension/adapter.js` | Pinned Effect Maker model integration, export/import and save verification. |
-| `extension/runtime.js` | Operation deadlines, cancellation and progress. |
+| `extension/runtime.js` | Per-step deadlines, cancellation and progress; no overall project deadline. |
 | `extension/editor-bridge.js`, `editor-job.js` | Selected-tab execution and job lifecycle. |
 | `extension/editor-panel.js`, `panel-styles.js` | Import/export controls. |
 | `extension/github-*.js` | Optional OAuth, repository UI and backup API. |

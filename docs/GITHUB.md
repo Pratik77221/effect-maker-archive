@@ -10,7 +10,7 @@ GitHub is optional. Each backup is a complete JSON archive at `effect-maker/<bac
 4. Paste the verification code on GitHub and approve the OAuth app named **effectmaker**.
 5. Return to the extension to select a repository.
 
-No personal access token or client secret needs to be created or pasted. Sign-in uses GitHub's [device authorization flow](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps#device-flow). Approval must finish within the extension's three-minute operation window; start sign-in again if it expires.
+No personal access token or client secret needs to be created or pasted. Sign-in uses GitHub's [device authorization flow](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps#device-flow). Approval must finish within the extension's three-minute sign-in window; start sign-in again if it expires. This sign-in deadline is separate from project imports, which have no overall time limit.
 
 The requested OAuth scope is **repo**, which includes private repositories. GitHub applies your account permissions, organization policies and branch rules. Authentication does not bypass them. Credentials are held in trusted browser session storage; closing/restarting the browser or reloading the extension may require signing in again. **Disconnect** removes the extension's local session token. Revoke the app in GitHub's application settings to remove its GitHub authorization. See [privacy](../PRIVACY.md).
 

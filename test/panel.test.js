@@ -132,6 +132,33 @@ test('Cancel during validation stops waiting and a late result cannot start impo
   assert.deepEqual(calls, ['preview-import']);
 });
 
+test('elapsed time omits a missing stage limit and displays a reported upload limit', async t => {
+  let tick;
+  t.mock.method(globalThis, 'setInterval', callback => { tick = callback; return 0; });
+  const entered = Promise.withResolvers();
+  const pending = Promise.withResolvers();
+  const ui = setupPanel(async (operation, input, task) => {
+    if (operation === 'preview-import') return plan;
+    entered.resolve(task);
+    return pending.promise;
+  });
+  await ui.select(archive);
+  const importing = ui.button('Import project').click();
+  const task = await entered.promise;
+  const elapsed = () => ui.all().find(node => node.className === 'ema-time').textContent;
+  tick();
+  assert.doesNotMatch(elapsed(), /max|NaN|Infinity/);
+  task.report({ stage: 'upload', message: 'Uploading asset 4…', stageElapsedMs: 12000, stageLimitMs: 90000 });
+  tick();
+  assert.match(elapsed(), /this step: 12s \/ 90s max/);
+  task.report({ stage: 'prepare', message: 'Preparing…', stageLimitMs: null });
+  tick();
+  assert.doesNotMatch(elapsed(), /max|NaN|Infinity/);
+  pending.resolve({ status: 'saved-reload-required' });
+  await importing;
+  assert.match(ui.status(), /imported and saved/);
+});
+
 test('saving errors show progress, offer a reload and export a diagnostic without project contents', async t => {
   t.mock.method(globalThis, 'setTimeout', () => 0);
   const pending = Promise.withResolvers();
@@ -159,7 +186,7 @@ test('saving errors show progress, offer a reload and export a diagnostic withou
   const diagnostic = await (await fetch(ui.downloads[0].href)).json();
   URL.revokeObjectURL(ui.downloads[0].href);
   assert.equal(diagnostic.error.stage, 'save');
-  assert.equal(diagnostic.extensionVersion, '0.4.3');
+  assert.equal(diagnostic.extensionVersion, '0.4.4');
   assert.equal(diagnostic.source, undefined);
   assert.equal(diagnostic.assets, undefined);
 });

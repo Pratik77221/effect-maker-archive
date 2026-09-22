@@ -9,13 +9,13 @@
 ## Install the release ZIP
 
 1. Visit the [latest release](https://github.com/Pratik77221/effect-maker-archive/releases/latest).
-2. Under **Assets**, download `effect-maker-archive-v0.4.3.zip` and extract it.
+2. Under **Assets**, download `effect-maker-archive-v0.4.4.zip` and extract it.
 3. Keep the extracted folder in a permanent location. Chrome loads an unpacked extension from this folder.
 4. Open `chrome://extensions` in Chrome.
 5. Enable **Developer mode**, then click **Load unpacked**.
 6. Select the extracted folder containing `manifest.json`.
 7. Use Chrome's Extensions menu to pin **Effect Maker Archive**, if desired.
-8. Open an Effect Maker project and click the extension icon. The controls should show **Version 0.4.3**.
+8. Open an Effect Maker project and click the extension icon. The controls should show **Version 0.4.4**.
 
 These are Chrome's standard [unpacked-extension installation steps](https://developer.chrome.com/docs/extensions/get-started/tutorial/hello-world#load-unpacked). This distribution is a GitHub release, not a Chrome Web Store installation.
 
@@ -50,7 +50,9 @@ Each Push backs up the project connected to the extension window. Use distinct b
 
 ## Progress, cancellation and recovery
 
-Progress shows the current stage, asset count where applicable, elapsed time and the stage deadline. Duration depends on asset count, file sizes, connection speed and Google's responses. The overall deadline is three minutes; it is not a promised completion time.
+Progress shows the current stage, asset count where applicable, elapsed time and the stage deadline when one applies. Duration depends on asset count, file sizes, connection speed and Google's responses. There is no overall project time limit: a project with many assets can keep transferring beyond three minutes. Each asset gets a fresh download or upload window; time spent on earlier assets does not shorten it.
+
+Individual steps still have deadlines: 30 seconds per asset download, 90 seconds per asset upload, 20 seconds for source application and 60 seconds for cloud save. These are maximum waits for each step, not estimated project durations. Cancel remains available throughout the operation.
 
 **Cancel** stops the extension's remaining work. Google's already-started upload, apply or save operations may finish afterward. A partial import is not rolled back.
 

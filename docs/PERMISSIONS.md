@@ -1,6 +1,6 @@
 # Browser permissions
 
-The published v0.4.3 manifest requests:
+The published v0.4.4 manifest requests:
 
 | Permission | Why it is needed |
 | --- | --- |

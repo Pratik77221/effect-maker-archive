@@ -15,10 +15,10 @@ export function renderEditorPanel(invoke, options = {}) {
   const id = 'em-local-archive-controls';
   const previous = document.getElementById(id);
   if (previous?.dataset.busy === 'true') {
-    if (previous.dataset.version !== '0.4.3' && !previous.querySelector?.('[data-upgrade-notice]')) {
+    if (previous.dataset.version !== '0.4.4' && !previous.querySelector?.('[data-upgrade-notice]')) {
       const notice = document.createElement('p');
       notice.dataset.upgradeNotice = 'true';
-      notice.textContent = 'An older import is still running. Reload this editor before testing version 0.4.3.';
+      notice.textContent = 'An older import is still running. Reload this editor before testing version 0.4.4.';
       previous.append(notice);
       const reload = document.createElement('button');
       reload.type = 'button';
@@ -32,7 +32,7 @@ export function renderEditorPanel(invoke, options = {}) {
   previous?.remove();
   const host = document.createElement('section');
   host.id = id;
-  host.dataset.version = '0.4.3';
+  host.dataset.version = '0.4.4';
   if (options.sidePanel) host.dataset.surface = 'side-panel';
   host.tabIndex = -1;
   host.setAttribute('role', 'dialog');
@@ -245,7 +245,7 @@ export function renderEditorPanel(invoke, options = {}) {
   const local = add('span', undefined, footer);
   icon('computer', local);
   add('span', 'For YouTube Effect Maker', local);
-  add('span', 'Version 0.4.3', footer);
+  add('span', 'Version 0.4.4', footer);
   function setStatus(state, title) {
     status.dataset.state = state;
     statusTitle.textContent = title;
@@ -285,7 +285,8 @@ export function renderEditorPanel(invoke, options = {}) {
     const task = activeTask;
     const updateElapsed = () => {
       const info = task.snapshot();
-      elapsed.textContent = Math.floor(info.elapsedMs / 1000) + 's elapsed · this step: ' + Math.floor(info.stageElapsedMs / 1000) + 's / ' + Math.ceil(info.stageLimitMs / 1000) + 's max';
+      const stepLimit = Number.isFinite(info.stageLimitMs) && info.stageLimitMs > 0 ? ' / ' + Math.ceil(info.stageLimitMs / 1000) + 's max' : '';
+      elapsed.textContent = Math.floor(info.elapsedMs / 1000) + 's elapsed · this step: ' + Math.floor(info.stageElapsedMs / 1000) + 's' + stepLimit;
     };
     updateElapsed();
     const ticker = setInterval(updateElapsed, 1000);

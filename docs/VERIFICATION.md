@@ -1,6 +1,6 @@
 # Verification status
 
-Release: **0.4.3** · recorded **22 September 2026**.
+Release: **0.4.4** · recorded **22 September 2026**.
 
 ## Reported real-world behavior
 
@@ -10,12 +10,13 @@ Earlier browser checks verified capture/restore of a text property and position,
 
 ## Automated coverage
 
-The final suite passes **82 tests** on Node.js v24.20.0. Coverage includes:
+The final suite passes **85 tests** on Node.js v24.20.0. Coverage includes:
 
 - Archive checksums, extraction/repacking, diffs and local Git checkpoints.
 - PNG, image-sequence and GLB reference remapping while preserving authoring IDs and links.
 - Destination-account upload options, use of new upload records and preservation of AI authoring references.
 - Command completion, source/save verification, cancellation, deadlines, changed destinations and prevention of late follow-up writes.
+- Removal of the overall deadline: a fake-clock import completes four 80-second uploads (320 seconds total), then applies and saves. Further checks verify cancellation after ten minutes, a later stalled upload's own 90-second deadline and progress text when no stage limit applies.
 - Serialized editor bridge, UI error states and a single reusable extension window.
 - GitHub authorization, token storage, push/pull integrity, large backups, history, conflicts, public-backup consent and permission failures.
 - All three reviewed editor profiles, all six supported backup import combinations, refusal of unknown builds/downgrades and serialized execution for every supported build.
@@ -23,7 +24,7 @@ The final suite passes **82 tests** on Node.js v24.20.0. Coverage includes:
 
 Editor and GitHub services are simulated in the automated suite. Passing tests do not prove that the live services accept every project.
 
-A browser check in the 0.4.2 release of the actual rendered GitHub panel with simulated services confirmed the refresh controls are visible and that refreshing preserves a selected repository, non-default branch, backup and earlier revision. No live GitHub repository was created for this UI check. Version 0.4.3 changes editor compatibility without changing those controls.
+A browser check in the 0.4.2 release of the actual rendered GitHub panel with simulated services confirmed the refresh controls are visible and that refreshing preserves a selected repository, non-default branch, backup and earlier revision. No live GitHub repository was created for this UI check. Those repository controls remain unchanged in 0.4.4.
 
 ## Current client contract checks
 

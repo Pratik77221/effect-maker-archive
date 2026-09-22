@@ -2,11 +2,11 @@
 
 ## The extension does not open
 
-Open a project editor, rather than the Effect Maker dashboard, before clicking the icon. Confirm that Chrome loaded the folder containing `manifest.json`. After an update, reload the extension and the editor tab. Version 0.4.3 uses one reusable controls window and does not depend on Chrome's Side Panel API.
+Open a project editor, rather than the Effect Maker dashboard, before clicking the icon. Confirm that Chrome loaded the folder containing `manifest.json`. After an update, reload the extension and the editor tab. Version 0.4.4 uses one reusable controls window and does not depend on Chrome's Side Panel API.
 
 ## Unsupported editor build
 
-Version **0.4.3** supports the current `effectmaker.effectmaker.en_GB.JjyImd5Sung.2020.O` build and the earlier `effectmaker.effectmaker.en_GB.gfHrZWkok9A.2020.O` and `effectmaker.effectmaker.en_GB.k9eBOpQ9YWc.2020.O` builds. If version 0.4.2 or earlier shows this error for the new build, [install the update](SETUP.md#update-an-existing-installation), reload the extension, then reload the editor tab. Backups from both earlier builds remain supported on the current build.
+Version **0.4.4** supports the current `effectmaker.effectmaker.en_GB.JjyImd5Sung.2020.O` build and the earlier `effectmaker.effectmaker.en_GB.gfHrZWkok9A.2020.O` and `effectmaker.effectmaker.en_GB.k9eBOpQ9YWc.2020.O` builds. If version 0.4.2 or earlier shows this error for the new build, [install the update](SETUP.md#update-an-existing-installation), reload the extension, then reload the editor tab. Backups from both earlier builds remain supported on the current build.
 
 Google can update its editor independently. Other builds still stop import/export until their contracts have been reviewed. The error now includes the detected build identifier; include it and the extension version in an issue. The latest [compatibility review](EDITOR-COMPATIBILITY.md) records the functions and upload fields checked.
 
@@ -18,7 +18,9 @@ Import requires a different project containing no authoring objects, content ass
 
 Open **Activity details** and choose **Download test log**. The current stage identifies whether validation, upload, source application or saving failed. A failure after uploads can leave partial state. Reload and inspect the destination before another attempt; use a new empty destination if it now contains content.
 
-The total deadline is three minutes. Changing the clock or waiting longer after a stopped operation will not resume it. Google operations already started may complete after cancellation; the extension does not claim rollback.
+Version 0.4.4 removes the overall three-minute deadline from both the controls window and the editor job. If an import still stops with the old three-minute error, update the extension and reload both the extension and the editor tab before retrying.
+
+Individual steps still time out: 30 seconds per asset download, 90 seconds per asset upload, 20 seconds to apply the source and 60 seconds to save. Each asset gets its full window regardless of the total elapsed time. Waiting longer after a stopped operation will not resume it. Google operations already started may complete after cancellation; the extension does not claim rollback.
 
 ## The editor did not apply the expected source
 

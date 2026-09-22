@@ -2,7 +2,7 @@
 
 ## Requirements and checks
 
-Use Node.js 22 or newer. There are no third-party JavaScript runtime dependencies to install.
+Use Node.js 22.2 or newer. There are no third-party JavaScript runtime dependencies to install.
 
 ```sh
 npm test
@@ -10,7 +10,7 @@ npm run build
 npm run check
 ```
 
-`npm run build` regenerates `extension/editor-panel.bundle.js` and `extension/editor-job.bundle.js` from the source modules. Commit regenerated bundles with changes to their source. They are static bundles; the shipped extension does not download or evaluate remote code.
+`npm run build` regenerates `extension/editor-panel.bundle.js` and `extension/editor-job.bundle.js` from the source modules. Commit regenerated bundles with changes to their source. They are static bundles. The optional GitHub updater verifies and installs a complete release into a user-selected folder and reloads the extension; it does not evaluate downloaded code in the current session.
 
 To make the installable ZIP, also install Python 3 and run:
 
@@ -29,6 +29,7 @@ The package script creates `dist/effect-maker-archive-v<version>.zip` and `dist/
 | `extension/editor-bridge.js`, `editor-job.js` | Selected-tab execution and job lifecycle. |
 | `extension/editor-panel.js`, `panel-styles.js` | Import/export controls. |
 | `extension/github-*.js` | Optional OAuth, repository UI and backup API. |
+| `extension/update-*.js` | Public release checks, bounded ZIP validation, selected-folder installation and update UI. |
 | `extension/launch.js`, `panel-target.js` | Single controls window and target validation. |
 | `lib/archive.js`, `cli.js` | Local archive and Git utilities. |
 | `fixtures/`, `test/`, `dev/` | Synthetic fixtures, automated tests and local UI previews. |
@@ -39,7 +40,7 @@ The package script creates `dist/effect-maker-archive-v<version>.zip` and `dist/
 python3 -m http.server 8765 --bind 127.0.0.1
 ```
 
-Open `http://localhost:8765/dev/ui-preview.html` for file controls or `http://localhost:8765/dev/github-preview.html` for GitHub flows. Preview accounts and service responses are simulated. These pages do not validate live cloud behavior.
+Open `http://localhost:8765/dev/ui-preview.html` for file controls, `http://localhost:8765/dev/github-preview.html` for GitHub backup flows or `http://localhost:8765/dev/update-preview.html` for the update controls. Preview accounts and service responses are simulated. These pages do not validate live cloud behavior or replace extension files.
 
 Icons are bundled. Regenerating raster icons with `scripts/build-icons.py` additionally requires Pillow; it is not required to use, test or package the existing extension.
 

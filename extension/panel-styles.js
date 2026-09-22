@@ -86,7 +86,13 @@ export const panelStyles = `
 #em-local-archive-controls .ema-details pre { margin-top: 10px; max-height: 180px; overflow: auto; padding: 12px; border-radius: 8px; background: #f8f8f8; color: #454545; white-space: pre-wrap; overflow-wrap: anywhere; font: 11px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; }
 #em-local-archive-controls .ema-log { margin-top: 10px; color: #065fd4; cursor: pointer; font-size: 12px; font-weight: 500; border-radius: 3px; }
 #em-local-archive-controls .ema-log:hover { text-decoration: underline; }
-#em-local-archive-controls .ema-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px; border-top: 1px solid #ededed; background: #fafafa; color: #606060; font-size: 10px; flex: 0 0 auto; }
+#em-local-archive-controls .ema-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 12px 20px; border-top: 1px solid #ededed; background: #fafafa; color: #606060; font-size: 10px; flex: 0 0 auto; }
+#em-local-archive-controls .ema-update-link { width: 100%; color: #065fd4; font-size: 12px; font-weight: 500; cursor: pointer; text-align: left; border-radius: 3px; }
+#em-local-archive-controls .ema-update-link:disabled { color: #909090; cursor: default; }
+#em-local-archive-controls .ema-update { margin-top: 18px; padding: 16px; border: 1px solid #d6e6f7; border-radius: 12px; background: #f5f9ff; }
+#em-local-archive-controls .ema-update .ema-button { margin-top: 12px; font-size: 12px; min-height: 36px; padding: 8px 12px; }
+#em-local-archive-controls .ema-update .ema-description { margin-top: 8px; overflow-wrap: anywhere; }
+#em-local-archive-controls .ema-update .ema-gh-link { margin-right: 16px; }
 #em-local-archive-controls .ema-footer span:first-child { display: flex; align-items: center; gap: 5px; }
 #em-local-archive-controls .ema-footer svg { width: 13px; height: 13px; }
 #em-local-archive-controls[data-surface="side-panel"] { inset: 0; width: 100%; max-width: none; height: 100vh; height: 100dvh; max-height: none; border: 0; border-radius: 0; box-shadow: none; }

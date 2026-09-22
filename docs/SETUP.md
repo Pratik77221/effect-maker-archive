@@ -9,13 +9,13 @@
 ## Install the release ZIP
 
 1. Visit the [latest release](https://github.com/Pratik77221/effect-maker-archive/releases/latest).
-2. Under **Assets**, download `effect-maker-archive-v0.4.4.zip` and extract it.
+2. Under **Assets**, download `effect-maker-archive-v0.4.5.zip` and extract it.
 3. Keep the extracted folder in a permanent location. Chrome loads an unpacked extension from this folder.
 4. Open `chrome://extensions` in Chrome.
 5. Enable **Developer mode**, then click **Load unpacked**.
 6. Select the extracted folder containing `manifest.json`.
 7. Use Chrome's Extensions menu to pin **Effect Maker Archive**, if desired.
-8. Open an Effect Maker project and click the extension icon. The controls should show **Version 0.4.4**.
+8. Open an Effect Maker project and click the extension icon. The controls should show **Version 0.4.5**.
 
 These are Chrome's standard [unpacked-extension installation steps](https://developer.chrome.com/docs/extensions/get-started/tutorial/hello-world#load-unpacked). This distribution is a GitHub release, not a Chrome Web Store installation.
 
@@ -59,6 +59,10 @@ Individual steps still have deadlines: 30 seconds per asset download, 90 seconds
 After a stopped import, reload and inspect the destination. If it contains content, use a new empty project for another attempt. Open **Activity details → Download test log** to record the failing step. Logs are downloaded to your device; they are not sent to the maintainer automatically.
 
 ## Update an existing installation
+
+For **0.4.5 and later**, click **Update from GitHub** at the bottom of the controls. Check the release, select the exact installed extension folder and allow access, then choose **Install update**. The extension verifies and installs the ZIP and reloads itself. Chrome may request folder access again in later sessions. No GitHub sign-in is needed. [Details and recovery](UPDATES.md).
+
+For earlier versions, or to use **Download ZIP** instead:
 
 1. Finish or cancel active extension operations.
 2. Download and extract the newer release.

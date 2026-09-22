@@ -1,12 +1,12 @@
 {
   "manifest_version": 3,
   "name": "Effect Maker Archive",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "minimum_chrome_version": "116",
   "description": "Import and export Effect Maker projects, with GitHub backup and version history.",
   "homepage_url": "https://github.com/Pratik77221/effect-maker-archive",
   "permissions": ["activeTab", "scripting", "storage"],
-  "optional_host_permissions": ["https://api.github.com/*", "https://github.com/*"],
+  "optional_host_permissions": ["https://api.github.com/*", "https://github.com/*", "https://release-assets.githubusercontent.com/*"],
   "content_security_policy": { "extension_pages": "script-src 'self'; object-src 'none'; frame-ancestors 'none'" },
   "icons": { "16": "icons/archive-16.png", "32": "icons/archive-32.png", "48": "icons/archive-48.png", "128": "icons/archive-128.png" },
   "action": {

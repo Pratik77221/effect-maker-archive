@@ -2,11 +2,11 @@
 
 ## The extension does not open
 
-Open a project editor, rather than the Effect Maker dashboard, before clicking the icon. Confirm that Chrome loaded the folder containing `manifest.json`. After an update, reload the extension and the editor tab. Version 0.4.4 uses one reusable controls window and does not depend on Chrome's Side Panel API.
+Open a project editor, rather than the Effect Maker dashboard, before clicking the icon. Confirm that Chrome loaded the folder containing `manifest.json`. After an update, reload the extension and the editor tab. Version 0.4.5 uses one reusable controls window and does not depend on Chrome's Side Panel API.
 
 ## Unsupported editor build
 
-Version **0.4.4** supports the current `effectmaker.effectmaker.en_GB.JjyImd5Sung.2020.O` build and the earlier `effectmaker.effectmaker.en_GB.gfHrZWkok9A.2020.O` and `effectmaker.effectmaker.en_GB.k9eBOpQ9YWc.2020.O` builds. If version 0.4.2 or earlier shows this error for the new build, [install the update](SETUP.md#update-an-existing-installation), reload the extension, then reload the editor tab. Backups from both earlier builds remain supported on the current build.
+Version **0.4.5** supports the current `effectmaker.effectmaker.en_GB.JjyImd5Sung.2020.O` build and the earlier `effectmaker.effectmaker.en_GB.gfHrZWkok9A.2020.O` and `effectmaker.effectmaker.en_GB.k9eBOpQ9YWc.2020.O` builds. If version 0.4.2 or earlier shows this error for the new build, [install the update](SETUP.md#update-an-existing-installation), reload the extension, then reload the editor tab. Backups from both earlier builds remain supported on the current build.
 
 Google can update its editor independently. Other builds still stop import/export until their contracts have been reviewed. The error now includes the detected build identifier; include it and the extension version in an issue. The latest [compatibility review](EDITOR-COMPATIBILITY.md) records the functions and upload fields checked.
 
@@ -49,5 +49,7 @@ Push backs up the current project to the selected path. Pushing an empty project
 Click **Refresh repositories**, directly below the repository selector. You can keep your existing GitHub sign-in. If you used **Create a repository** in the extension, returning to the controls triggers this refresh automatically. If an operation is still running, the refresh waits until it finishes. Check that the repository belongs to the connected account or is accessible to it if it remains missing.
 
 ## Reporting an issue
+
+For the new updater, see [GitHub update setup and recovery](UPDATES.md). If Chrome's running version does not change, verify that you chose its exact Load unpacked folder. If installation fails, use Download ZIP and update manually.
 
 Include the extension version, failing action/stage, browser version, whether the error also occurs in a native project, and a reviewed diagnostic log where helpful. Share reproduction steps through [GitHub Issues](https://github.com/Pratik77221/effect-maker-archive/issues). Archives and successful-import logs can include identifiers and content summaries; avoid posting private effect data publicly.

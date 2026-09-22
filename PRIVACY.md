@@ -1,6 +1,6 @@
 # Privacy declaration
 
-**Effect Maker Archive · version 0.4.4 · effective 22 September 2026**
+**Effect Maker Archive · version 0.4.5 · effective 22 September 2026**
 
 Maintained by [Pratik77221](https://github.com/Pratik77221). This declaration describes the extension distributed from [this repository](https://github.com/Pratik77221/effect-maker-archive), including its optional GitHub connection and local CLI.
 
@@ -19,6 +19,8 @@ The extension accesses and processes data needed for the actions you request. It
 | Import | The archive you choose and the current destination's project/channel identifiers | Check the file, upload its assets to the destination in Google Effect Maker, remap references and save the source. |
 | GitHub sign-in | OAuth device codes, access token, GitHub login and numeric account ID | Authorize GitHub access and display the connected account. Authentication is directly with GitHub. |
 | GitHub backup | Accessible repository metadata, branches, backup paths, commit history and selected archive contents | Show your choices; fetch a backup on Pull; send an archive and commit note to your chosen repository on Push. |
+| Extension updates | Installed version, public release metadata and extension ZIP | Check the maintainer's public GitHub release only when requested. Download update code without the GitHub backup token or Google credentials. |
+| Direct update installation | A directory handle chosen by you and the extension files inside it | Validate the selected folder, keep a local copy of files being replaced, install the verified release and reload the extension. No selected local files are uploaded. |
 | Diagnostics | Extension version, stages, times, errors and project/asset identifiers, counts or summaries depending on the operation | Display activity locally and download a test log only when you choose that action. |
 | Local CLI | Archives, extracted assets, manifests, diffs and Git checkpoint data | Write to directories you specify on your computer. The CLI does not automatically push to a remote. |
 
@@ -31,6 +33,8 @@ The extension does not read or export Google passwords, authentication cookies o
 - **Temporary project data and activity:** held in the extension window and editor memory during use. Completed editor jobs are normally released after the extension receives the result; a cleanup timer removes completed job entries after approximately two minutes. Closing or reloading pages also releases their in-memory state. The UI can retain its selected archive or last activity until it is closed, reloaded or replaced.
 - **GitHub token and profile:** kept in `chrome.storage.session`, restricted to trusted extension contexts. The extension does not put them in persistent local storage, Chrome Sync, archives or diagnostic logs. Disconnect removes this session entry; Chrome also clears session storage when the extension is reloaded, disabled or updated, or the browser restarts. [Chrome storage documentation](https://developer.chrome.com/docs/extensions/reference/api/storage).
 - **Repository preferences:** the selected repository, branch and backup path are stored in `chrome.storage.local` until changed, cleared or the extension is removed. Disconnecting GitHub does not erase these preferences.
+- **Update folder:** a directory handle is stored in the extension's IndexedDB after you choose the installation folder. **Forget folder** removes that remembered handle; Chrome may retain its own file-access permission separately. The updater queries permission again before writing. The expected version after an installation is stored briefly in `chrome.storage.local` and removed when the controls next check the installed version.
+- **Previous extension files:** `.effect-maker-archive-update-backup.json` is written in the selected extension folder before program files are replaced. It contains the previous contents of replaced package files and version information, not Chrome storage or your exported project archives. It remains there until a subsequent successful backup replaces it or you remove it. A failed write triggers an attempt to restore those files; a browser shutdown can interrupt that recovery.
 - **Your files:** exported archives, downloaded logs, extracted assets and local Git checkpoints remain where you save them until you remove them. They are not encrypted by the extension; base64 asset encoding is not encryption.
 - **Google and GitHub copies:** projects and backups remain in those services under their policies and your account/repository settings. Git commits can retain older versions after a file is changed or removed.
 
@@ -39,6 +43,8 @@ Removing the extension or disconnecting GitHub does not delete your downloaded f
 ## Network transfers and access
 
 The extension has no developer collection endpoint. Project operations use the selected Google Effect Maker project and its asset service. Optional GitHub operations use `github.com` for device authorization and `api.github.com` for account/repository operations. These transfers use HTTPS. Google and GitHub can receive ordinary connection information, such as an IP address, when you connect to them.
+
+**Update from GitHub** requests public release information from `api.github.com`. **Install update** downloads the named ZIP from the maintainer's GitHub release, including GitHub's `release-assets.githubusercontent.com` download host. These requests omit authentication cookies and the backup OAuth token. Update checks and installations are initiated by your clicks; there are no scheduled update checks or silent background installations. Download ZIP opens GitHub through the browser, where your ordinary browser session and GitHub's policies apply.
 
 **Refresh repositories** requests updated repository choices and the selected repository's branches, backups and history directly from GitHub using the existing session token. Clicking **Create a repository** also schedules this metadata refresh when you return to the extension. Refreshing does not export, upload or import an Effect Maker project.
 

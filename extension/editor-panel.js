@@ -15,10 +15,10 @@ export function renderEditorPanel(invoke, options = {}) {
   const id = 'em-local-archive-controls';
   const previous = document.getElementById(id);
   if (previous?.dataset.busy === 'true') {
-    if (previous.dataset.version !== '0.4.4' && !previous.querySelector?.('[data-upgrade-notice]')) {
+    if (previous.dataset.version !== '0.4.5' && !previous.querySelector?.('[data-upgrade-notice]')) {
       const notice = document.createElement('p');
       notice.dataset.upgradeNotice = 'true';
-      notice.textContent = 'An older import is still running. Reload this editor before testing version 0.4.4.';
+      notice.textContent = 'An older import is still running. Reload this editor before testing version 0.4.5.';
       previous.append(notice);
       const reload = document.createElement('button');
       reload.type = 'button';
@@ -32,7 +32,7 @@ export function renderEditorPanel(invoke, options = {}) {
   previous?.remove();
   const host = document.createElement('section');
   host.id = id;
-  host.dataset.version = '0.4.4';
+  host.dataset.version = '0.4.5';
   if (options.sidePanel) host.dataset.surface = 'side-panel';
   host.tabIndex = -1;
   host.setAttribute('role', 'dialog');
@@ -79,6 +79,7 @@ export function renderEditorPanel(invoke, options = {}) {
   add('p', 'Import and export your projects', headingCopy, 'ema-subtitle').id = id + '-subtitle';
   let archive;
   let busy = false;
+  let cancellable = true;
   let activeTask;
   let reloadRequired = false;
   let log;
@@ -241,11 +242,14 @@ export function renderEditorPanel(invoke, options = {}) {
     setTimeout(() => URL.revokeObjectURL(url), 30000);
   }, details, 'ema-log');
   saveLog.hidden = true;
+  const updateArea = options.updates ? add('section', undefined, body, 'ema-update') : undefined;
+  if (updateArea) updateArea.hidden = true;
   const footer = add('footer', undefined, host, 'ema-footer');
   const local = add('span', undefined, footer);
   icon('computer', local);
   add('span', 'For YouTube Effect Maker', local);
-  add('span', 'Version 0.4.4', footer);
+  add('span', 'Version 0.4.5', footer);
+  const updateButton = options.updates ? button('Update from GitHub', () => {}, footer, 'ema-update-link') : undefined;
   function setStatus(state, title) {
     status.dataset.state = state;
     statusTitle.textContent = title;
@@ -262,6 +266,7 @@ export function renderEditorPanel(invoke, options = {}) {
     picker.dataset.disabled = String(file.disabled);
     importButton.disabled = busy || reloadRequired || !archive;
     cancel.hidden = !busy;
+    cancel.disabled = !cancellable;
     reload.hidden = !reloadRequired;
     reload.disabled = busy;
     saveLog.hidden = !log || busy;
@@ -271,10 +276,11 @@ export function renderEditorPanel(invoke, options = {}) {
   async function run(kind, message, operation) {
     if (busy || reloadRequired) return false;
     busy = true;
+    cancellable = true;
     log = undefined;
     refresh();
     result.textContent = message;
-    setStatus('working', { file: 'Reading file', export: 'Exporting project', import: 'Checking project', connect: 'Connecting GitHub', push: 'Backing up project', pull: 'Loading backup', github: 'Loading GitHub' }[kind] || 'Working');
+    setStatus('working', { file: 'Reading file', export: 'Exporting project', import: 'Checking project', connect: 'Connecting GitHub', push: 'Backing up project', pull: 'Loading backup', github: 'Loading GitHub', update: 'Extension update' }[kind] || 'Working');
     details.hidden = true;
     details.open = false;
     if (['export', 'import', 'push', 'pull', 'connect'].includes(kind)) status.scrollIntoView?.({ block: 'nearest' });
@@ -299,7 +305,7 @@ export function renderEditorPanel(invoke, options = {}) {
       const error = task.error(reason);
       reloadRequired = !!error.reloadRequired;
       result.textContent = error.code === 'CANCELLED' ? error.message : 'Error: ' + error.message;
-      setStatus(error.code === 'CANCELLED' ? 'cancelled' : 'error', error.code === 'CANCELLED' ? 'Cancelled' : { file: 'Check your file', export: 'Export stopped', import: 'Import stopped' }[kind] || 'GitHub action stopped');
+      setStatus(error.code === 'CANCELLED' ? 'cancelled' : 'error', error.code === 'CANCELLED' ? 'Cancelled' : { file: 'Check your file', export: 'Export stopped', import: 'Import stopped', update: 'Update stopped' }[kind] || 'GitHub action stopped');
       if (kind === 'file') {
         picker.dataset.state = 'error';
         fileHint.textContent = 'Choose a valid project archive to continue';
@@ -322,7 +328,8 @@ export function renderEditorPanel(invoke, options = {}) {
   document.body.append(host);
   host.focus();
   return {
-    status: 'editor-controls-ready', host, githubArea, run, showDetails,
+    status: 'editor-controls-ready', host, githubArea, updateArea, updateButton, run, showDetails,
+    setCancellable(value) { cancellable = !!value; refresh(); },
     showFiles: () => showTab('files'),
     activeTab: () => activeTab,
     onTabChange(listener) { tabListeners.add(listener); return () => tabListeners.delete(listener); },

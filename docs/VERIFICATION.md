@@ -1,6 +1,6 @@
 # Verification status
 
-Release: **0.4.4** · recorded **22 September 2026**.
+Release: **0.4.5** · recorded **22 September 2026**.
 
 ## Reported real-world behavior
 
@@ -10,7 +10,7 @@ Earlier browser checks verified capture/restore of a text property and position,
 
 ## Automated coverage
 
-The final suite passes **85 tests** on Node.js v24.20.0. Coverage includes:
+The final suite passes **103 tests** on Node.js v24.20.0. Coverage includes:
 
 - Archive checksums, extraction/repacking, diffs and local Git checkpoints.
 - PNG, image-sequence and GLB reference remapping while preserving authoring IDs and links.
@@ -21,12 +21,16 @@ The final suite passes **85 tests** on Node.js v24.20.0. Coverage includes:
 - GitHub authorization, token storage, push/pull integrity, large backups, history, conflicts, public-backup consent and permission failures.
 - All three reviewed editor profiles, all six supported backup import combinations, refusal of unknown builds/downgrades and serialized execution for every supported build.
 - New-repository discovery with the existing login, preservation of branch/backup/revision selection, refresh failure recovery and deferred refresh after returning from repository creation.
+- Public release/version checks without backup credentials, ZIP hash and path validation, rejection of changed permission contracts, bounded decompression, folder validation, backup-before-write ordering, manifest-last replacement and recovery after a simulated write failure.
+- Update UI permission denial, project-operation locking, folder setup, verification before installation and reload only after success.
 
 Editor and GitHub services are simulated in the automated suite. Passing tests do not prove that the live services accept every project.
 
-A browser check in the 0.4.2 release of the actual rendered GitHub panel with simulated services confirmed the refresh controls are visible and that refreshing preserves a selected repository, non-default branch, backup and earlier revision. No live GitHub repository was created for this UI check. Those repository controls remain unchanged in 0.4.4.
+A browser check in the 0.4.2 release of the actual rendered GitHub panel with simulated services confirmed the refresh controls are visible and that refreshing preserves a selected repository, non-default branch, backup and earlier revision. No live GitHub repository was created for this UI check. Those repository controls remain unchanged in 0.4.5.
 
 ## Current client contract checks
+
+The new update controls were tested with simulated filesystem handles and service responses. The browser connection was unavailable for this release's visual check and native folder-permission/reload test. The real Chrome permission dialog, persistent folder grant and self-reload sequence therefore remain unverified. The local preview does not write real extension files. [Update details and fallback](UPDATES.md).
 
 On 22 September 2026, a new browser tab at Effect Maker's home page served `effectmaker.effectmaker.en_GB.JjyImd5Sung.2020.O`. Version 0.4.2 recognized the two earlier builds. This new client renamed the injector, message accessor, model, asset, graph and command symbols, and changed the explicit upload destination option from `Ud` to `Vd`.
 

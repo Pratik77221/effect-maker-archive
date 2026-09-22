@@ -16,6 +16,8 @@ for path in sorted(extension.rglob('*')):
     if path.is_symlink():
         raise SystemExit('Refusing symlink: ' + str(path))
     if path.is_file():
+        if path.name == '.effect-maker-archive-update-backup.json':
+            continue
         name = path.relative_to(extension).as_posix()
         if path.suffix not in {'.js', '.json', '.html', '.css', '.png', '.svg'}:
             raise SystemExit('Unexpected extension file: ' + name)
@@ -24,7 +26,7 @@ documentation_url = 'https://github.com/Pratik77221/effect-maker-archive/blob/ma
 privacy = (root / 'PRIVACY.md').read_text()
 privacy = privacy.replace('](docs/PERMISSIONS.md)', '](' + documentation_url + 'docs/PERMISSIONS.md)')
 installation = (root / 'docs' / 'SETUP.md').read_text()
-for page in ['GITHUB.md', 'TROUBLESHOOTING.md']:
+for page in ['GITHUB.md', 'TROUBLESHOOTING.md', 'UPDATES.md']:
     installation = installation.replace('](' + page + ')', '](' + documentation_url + 'docs/' + page + ')')
 installation = installation.replace('](../PRIVACY.md)', '](PRIVACY.md)')
 files['PRIVACY.md'] = privacy.encode('utf-8')

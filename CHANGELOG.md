@@ -1,5 +1,14 @@
 # Release notes
 
+## 0.4.5 — 22 September 2026
+
+- Add **Update from GitHub** to the controls footer, with installed/latest versions, release notes and a direct ZIP download. Public release checks need no GitHub backup sign-in.
+- Add optional installation into the exact unpacked extension folder selected by the user. Remember its handle locally, verify release SHA-256 and package contents, back up changed files, write the manifest last and reload the extension after successful verification.
+- Attempt to restore prior files after a write failure. Block updates during project work, keep cancellation available before replacement, and offer manual installation when permissions/browser requirements change or direct installation is unavailable.
+- Request optional access to GitHub's release-asset host only for installation. Update permission, storage, backup-retention and recovery documentation.
+
+Validation: **103 passing automated tests**, including release errors, package checks, simulated filesystem recovery and updater UI behavior. Chrome's real directory-permission and self-reload flow was not live-tested because the browser connection was unavailable. The first upgrade to 0.4.5 must be installed manually to obtain the updater. This feature applies requested updates; it does not install silently in the background.
+
 ## 0.4.4 — 22 September 2026
 
 - Remove the overall three-minute cutoff from both the extension controls and editor jobs. Projects with many assets can keep importing or exporting while each transfer completes within its own time window.

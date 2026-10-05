@@ -15,9 +15,13 @@ const clients = [
     injector: 'I', Command: 'Vs', config: 'cn', handlers: 'ea', message: 'Ho' },
   { build: 'effectmaker.effectmaker.en_GB.JjyImd5Sung.2020.O', sha256: '767c7f62dcb557060c2907a320496ef16f864548c16076f6d6820dc7ea4260ce',
     Model: 'lC', Project: 'RC', Source: 'aD', Record: 'GL', Apply: 'RZa', dispatch: 'EQ', AssetService: 'DA', upload: 'tS', uploadProject: 'Vd', dependencies: 'bxa',
-    injector: 'K', Command: 'Ws', config: 'en', handlers: 'ga', message: 'Jo' }
+    injector: 'K', Command: 'Ws', config: 'en', handlers: 'ga', message: 'Jo' },
+  { build: 'effectmaker.effectmaker.en_GB.kns6RAOc7Cs.2020.O', sha256: 'c7697c11ed35f1c629fc7fb342759e9f02e54b0ce42892ffe26df756b849fcec',
+    Model: 'TC', Project: 'zD', Source: 'JD', Record: 'jM', Apply: 'f_a', dispatch: 'cR', AssetService: 'kB', upload: 'KS', uploadProject: 'Yd', dependencies: 'ixa',
+    injector: 'J', Command: 'lt', config: 'zn', handlers: 'ga', message: 'Vo' }
+
 ];
-if (process.argv.length !== clients.length + 2) throw new Error('Usage: node scripts/check-editor-contract.js <k9eBOpQ9YWc-client.js> <gfHrZWkok9A-client.js> <JjyImd5Sung-client.js>');
+if (process.argv.length !== clients.length + 2) throw new Error('Usage: node scripts/check-editor-contract.js <k9eBOpQ9YWc-client.js> <gfHrZWkok9A-client.js> <JjyImd5Sung-client.js> <kns6RAOc7Cs-client.js>');
 
 async function loadClient(filename, profile) {
   const code = await readFile(filename, 'utf8');

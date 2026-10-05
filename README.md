@@ -6,7 +6,7 @@ Export, import and back up your YouTube Effect Maker projects from one Chrome ex
 
 Save a complete project archive to your computer, restore it into an empty project, or connect GitHub to keep manual backups and version history. Local export/import works without connecting GitHub.
 
-**[Download v0.4.5](https://github.com/Pratik77221/effect-maker-archive/releases/latest)** · **[Setup and usage](docs/SETUP.md)** · **[GitHub backups](docs/GITHUB.md)** · **[Privacy declaration](PRIVACY.md)**
+**[Download v0.4.6](https://github.com/Pratik77221/effect-maker-archive/releases/latest)** · **[Setup and usage](docs/SETUP.md)** · **[GitHub backups](docs/GITHUB.md)** · **[Privacy declaration](PRIVACY.md)**
 
 This is an independent, unofficial project. It is not affiliated with, endorsed by, or supported by Google, YouTube or GitHub. Effect Maker has no official project import/export API; compatibility is limited to the reviewed editor builds. See [limitations](#compatibility-and-limits).
 
@@ -26,7 +26,7 @@ Backups preserve authoring objects, asset definitions, visual scripts and embedd
 
 ## Install in Chrome
 
-1. Open [Releases](https://github.com/Pratik77221/effect-maker-archive/releases/latest) and download **`effect-maker-archive-v0.4.5.zip`** from **Assets**.
+1. Open [Releases](https://github.com/Pratik77221/effect-maker-archive/releases/latest) and download **`effect-maker-archive-v0.4.6.zip`** from **Assets**.
 2. Extract the ZIP to a folder you will keep on your computer.
 3. Open `chrome://extensions` and enable **Developer mode**.
 4. Click **Load unpacked** and select the extracted folder containing `manifest.json`.
@@ -38,7 +38,7 @@ If you download GitHub's automatically generated **Source code (zip)** instead, 
 
 ## Update from the extension
 
-Version 0.4.5 adds **Update from GitHub** in the footer. Install this version manually once to get the button. Future updates can be installed from the controls:
+Version 0.4.5 introduced **Update from GitHub** in the footer. Install 0.4.6 manually once if your current version has no update button to get the button. Future updates can be installed from the controls:
 
 1. Click **Update from GitHub** to check the latest stable release. GitHub sign-in is not required.
 2. Choose the exact folder you selected in Chrome's **Load unpacked** dialog and allow file access.
@@ -67,14 +67,14 @@ That is why our declaration says **no developer collection or tracking**, rather
 ## Compatibility and limits
 
 - Chrome **116+**. Other Chromium browsers have not been independently validated.
-- Current inspected editor build: `effectmaker.effectmaker.en_GB.JjyImd5Sung.2020.O`. The earlier `effectmaker.effectmaker.en_GB.gfHrZWkok9A.2020.O` and `effectmaker.effectmaker.en_GB.k9eBOpQ9YWc.2020.O` builds are also supported. Other builds are rejected until reviewed. Backups from either earlier build can be imported into the current build; downgrades are refused.
+- Current inspected editor build: `effectmaker.effectmaker.en_GB.kns6RAOc7Cs.2020.O`. The earlier `effectmaker.effectmaker.en_GB.JjyImd5Sung.2020.O`, `effectmaker.effectmaker.en_GB.gfHrZWkok9A.2020.O` and `effectmaker.effectmaker.en_GB.k9eBOpQ9YWc.2020.O` builds are also supported. Other builds are rejected until reviewed. Backups from all three earlier builds can be imported into the current build; downgrades are refused.
 - Import requires a separate **empty** destination. It does not merge into existing content.
 - Maximum archive: **60 MiB**; individual binary: **10 MiB**; combined binaries: **40 MiB**. These are extension limits, not Effect Maker's publication limits.
 - Supported binary imports: PNG, JPEG, WebP and GLB. LUT restoration is not implemented.
 - **No overall time limit** for project export/import. Each step has its own limit: **30 seconds per download**, **90 seconds per upload**, **20 seconds to apply**, and **60 seconds to save**. A project with many assets can take longer than three minutes. Cancel remains available.
 - A cancelled or failed import may leave uploads or project changes behind. There is no automatic rollback; reload and inspect the destination before retrying.
 
-Earlier releases have user-reported working export/import and GitHub backup. Version 0.4.5 adds GitHub release checks and optional folder-based installation, with automated coverage for integrity checks, write-failure recovery and UI controls. The overall project cutoff remains removed. The browser's native folder-permission and self-reload flow has not been live-verified in this release; Download ZIP remains available. [Verification details](docs/VERIFICATION.md) · [Troubleshooting](docs/TROUBLESHOOTING.md).
+Earlier releases have user-reported working export/import and GitHub backup. Version 0.4.6 supports the 5 October editor build, including its renamed asset-record and graph methods. Ten native-client export/import paths pass offline checks. It also includes GitHub release checks and optional folder installation. The overall project cutoff remains removed. The browser's native folder-permission and self-reload flow has not been live-verified in this release; Download ZIP remains available. [Verification details](docs/VERIFICATION.md) · [Troubleshooting](docs/TROUBLESHOOTING.md).
 
 ## For developers
 

@@ -1,5 +1,13 @@
 # Release notes
 
+## 0.4.6 — 5 October 2026
+
+- Support the reviewed `effectmaker.effectmaker.en_GB.kns6RAOc7Cs.2020.O` editor build.
+- Map renamed project, asset, upload, graph and command APIs, including asset-record IDs and graph-node methods.
+- Preserve forward import support for backups from all three earlier reviewed builds; unknown builds and downgrades remain blocked.
+- Verify all ten same-build/forward import paths with the four actual downloaded native clients and synthetic source/binary data.
+- Include the GitHub release updater introduced in 0.4.5, whose ZIP release was not published before this compatibility update.
+
 ## 0.4.5 — 22 September 2026
 
 - Add **Update from GitHub** to the controls footer, with installed/latest versions, release notes and a direct ZIP download. Public release checks need no GitHub backup sign-in.

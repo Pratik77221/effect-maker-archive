@@ -1,8 +1,9 @@
 // Minimal model contract shared by adapter and serialized-bridge tests.
 export const BUILD = 'effectmaker.effectmaker.en_GB.k9eBOpQ9YWc.2020.O';
 export const SEPTEMBER_11_BUILD = 'effectmaker.effectmaker.en_GB.gfHrZWkok9A.2020.O';
-export const CURRENT_BUILD = 'effectmaker.effectmaker.en_GB.JjyImd5Sung.2020.O';
-export const REVIEWED_BUILDS = [BUILD, SEPTEMBER_11_BUILD, CURRENT_BUILD];
+export const SEPTEMBER_22_BUILD = 'effectmaker.effectmaker.en_GB.JjyImd5Sung.2020.O';
+export const CURRENT_BUILD = 'effectmaker.effectmaker.en_GB.kns6RAOc7Cs.2020.O';
+export const REVIEWED_BUILDS = [BUILD, SEPTEMBER_11_BUILD, SEPTEMBER_22_BUILD, CURRENT_BUILD];
 export function setup({ build = BUILD, dirty = false, occupied = false } = {}) {
   const trace = [];
   class Message { constructor(value = []) { this.value = value; } toJSON() { return this.value; } serialize() { return JSON.stringify(this.value); } }
@@ -26,11 +27,18 @@ export function setup({ build = BUILD, dirty = false, occupied = false } = {}) {
       yA: ns.zA, AA: ns.BA, Ho: ns.Ho, iM: ns.kM, rM: ns.tM, uy: ns.wy, sM: ns.uM,
       Fx: ns.Hx, Wwa: ns.Vwa, iy: ns.ky, jM: ns.lM };
     model.v = { mb: model.v.sb, xf: model.v.yf, Kd: model.v.Ke };
-  } else if (build === CURRENT_BUILD) {
+  } else if (build === SEPTEMBER_22_BUILD) {
     exposed = { K: ns.I, id: ns.id, EQ: ns.FQ, lC: ns.hC, aD: ns.XC, PC: ns.LC, Ws: ns.Vs,
       DA: ns.zA, FA: ns.BA, Jo: ns.Ho, kM: ns.kM, tM: ns.tM, yy: ns.wy, uM: ns.uM,
       Jx: ns.Hx, bxa: ns.Vwa, my: ns.ky, lM: ns.lM };
     model.v = { nb: model.v.sb, wf: model.v.yf, Ld: model.v.Ke };
+  }
+  if (build === CURRENT_BUILD) {
+    exposed = { J: ns.I, id: ns.id, cR: ns.FQ, TC: ns.hC, JD: ns.XC, xD: ns.LC, lt: ns.Vs,
+      kB: ns.zA, mB: ns.BA, Vo: ns.Ho, KM: ns.kM, UM: ns.tM, Sy: ns.wy, VM: ns.uM,
+      cy: ns.Hx, ixa: ns.Vwa, Gy: ns.ky, LM: ns.lM };
+    model.v = { qb: model.v.sb, Ef: model.v.yf, Od: model.v.Ke };
+    exposed.VM = () => ({ Ob: emptyGraph.Lb, v: emptyGraph.v });
   }
   globalThis.window = { default_effectmaker: exposed };
   return { trace, model, ns: exposed, setSource: value => { source = new Message(value); } };

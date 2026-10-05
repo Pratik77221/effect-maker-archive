@@ -14,7 +14,8 @@ export async function effectMakerOperation(operation, input = {}, runtime) {
     // Keep reviewed profiles for older backups and tabs still open during a rollout.
     const previousBuild = 'effectmaker.effectmaker.en_GB.k9eBOpQ9YWc.2020.O';
     const september11Build = 'effectmaker.effectmaker.en_GB.gfHrZWkok9A.2020.O';
-    const currentBuild = 'effectmaker.effectmaker.en_GB.JjyImd5Sung.2020.O';
+    const september22Build = 'effectmaker.effectmaker.en_GB.JjyImd5Sung.2020.O';
+    const currentBuild = 'effectmaker.effectmaker.en_GB.kns6RAOc7Cs.2020.O';
     const profiles = {
       [previousBuild]: {
         symbols: {
@@ -38,7 +39,7 @@ export async function effectMakerOperation(operation, input = {}, runtime) {
         projectId: 'mb', title: 'xf', channelId: 'Kd', children: 'Db', uploadProject: 'Ud',
         accepts: [previousBuild, september11Build]
       },
-      [currentBuild]: {
+      [september22Build]: {
         symbols: {
           injector: 'K', Model: 'lC', Source: 'aD', message: 'Jo', Scene: 'PC', objects: 'kM',
           assetTree: 'tM', assets: 'yy', graph: 'uM', subgraphs: 'Jx', dependencies: 'bxa',
@@ -47,8 +48,21 @@ export async function effectMakerOperation(operation, input = {}, runtime) {
           sequence: 'Ay', setStrings: 'nG', frameIds: 'zy', nodeInputs: 'my', inputLinks: 'lM'
         },
         projectId: 'nb', title: 'wf', channelId: 'Ld', children: 'Ab', uploadProject: 'Vd',
-        accepts: [previousBuild, september11Build, currentBuild]
+        accepts: [previousBuild, september11Build, september22Build]
+      },
+      [currentBuild]: {
+        symbols: {
+          injector: 'J', Model: 'TC', Source: 'JD', message: 'Vo', Scene: 'xD', objects: 'KM',
+          assetTree: 'UM', assets: 'Sy', graph: 'VM', subgraphs: 'cy', dependencies: 'ixa',
+          AssetService: 'kB', assetUrl: 'mB', markJson: 'id', Command: 'lt', dispatch: 'cR', upload: 'KS',
+          imageId: 'Vy', setImageId: 'wxa', glb: 'Zy', glbId: 'Yy', setGlbId: 'Bxa',
+          sequence: 'Uy', setStrings: 'UG', frameIds: 'Ty', nodeInputs: 'Gy', inputLinks: 'LM'
+        },
+        projectId: 'qb', title: 'Ef', channelId: 'Od', children: 'tb', uploadProject: 'Yd',
+        methods: { assetName: 'Pa', image: 'Ua', recordId: 'Ca', nodes: 'Ob' },
+        accepts: [previousBuild, september11Build, september22Build, currentBuild]
       }
+
     };
     const FORMAT = 'effect-maker-source-archive';
     const MAX_ASSET = 10 * 1024 * 1024;
@@ -62,6 +76,7 @@ export async function effectMakerOperation(operation, input = {}, runtime) {
     const BUILD = Array.from(document.scripts, script => script.src.match(/\/k=(effectmaker\.effectmaker\.[^/]+)\//)?.[1]).find(Boolean);
     const profile = profiles[BUILD];
     if (!profile) fail('Unsupported editor build: ' + (BUILD || 'not detected') + '. Update Effect Maker Archive to the latest release. This build must be reviewed before use.');
+    const methods = profile.methods ?? { assetName: 'Qa', image: 'Ta', recordId: 'Ba', nodes: 'Lb' };
     const api = Object.fromEntries(Object.entries(profile.symbols).map(([name, symbol]) => [name, window.default_effectmaker?.[symbol]]));
     const requireFunctions = names => {
       for (const name of names) if (typeof api[name] !== 'function') fail('Editor adapter unavailable: ' + name + ' (' + profile.symbols[name] + ') in ' + BUILD + '.');
@@ -92,9 +107,9 @@ export async function effectMakerOperation(operation, input = {}, runtime) {
       const graphs = graph ? [graph, ...api.subgraphs(graph).values()] : [];
       return {
         objects: objects.filter(o => o.getId() !== 'scene-root').map(o => ({ id: o.getId(), name: o.getName?.() ?? '', children: Array.from(o[profile.children]?.() ?? []) })),
-        assets: assets.filter(a => a.pa() !== 0).map(a => ({ id: a.getId(), name: a.Qa(), type: a.pa() })),
-        graphNodes: graphs.reduce((n, g) => n + g.Lb().size, 0),
-        graphEdges: graphs.reduce((n, g) => n + Array.from(g.Lb().values()).reduce((count, node) => count + Array.from(api.nodeInputs(node).values()).reduce((total, port) => total + api.inputLinks(port).length, 0), 0), 0),
+        assets: assets.filter(a => a.pa() !== 0).map(a => ({ id: a.getId(), name: a[methods.assetName](), type: a.pa() })),
+        graphNodes: graphs.reduce((n, g) => n + g[methods.nodes]().size, 0),
+        graphEdges: graphs.reduce((n, g) => n + Array.from(g[methods.nodes]().values()).reduce((count, node) => count + Array.from(api.nodeInputs(node).values()).reduce((total, port) => total + api.inputLinks(port).length, 0), 0), 0),
         graphVariables: graphs.reduce((n, g) => n + g.v().length, 0),
         subgraphs: graph ? api.subgraphs(graph).size : 0
       };
@@ -223,25 +238,25 @@ export async function effectMakerOperation(operation, input = {}, runtime) {
         runtime.markWrite();
         return api.upload(assetService, new File([bytes], filename, { type: asset.mime }), { fileName: filename, channelId, [profile.uploadProject]: projectId });
       }, { completed: uploaded.size, total: decoded.size, assetId: oldId, bytes: bytes.length });
-      if (!result?.Ba()) fail('Upload did not return a usable asset record.');
+      if (!result?.[methods.recordId]?.()) fail('Upload did not return a usable asset record.');
       uploaded.set(oldId, result);
     }
     // Backend asset IDs change; authoring object IDs and graph links remain untouched.
     for (const asset of contentAssets) {
       if (asset.pa() === 4) {
-        const image = asset.Ta();
+        const image = asset[methods.image]();
         const old = api.imageId(image) || asset.getId();
-        if (uploaded.has(old)) api.setImageId(image, uploaded.get(old).Ba());
+        if (uploaded.has(old)) api.setImageId(image, uploaded.get(old)[methods.recordId]());
       } else if (asset.pa() === 8) {
         const modelAsset = api.glb(asset);
         const old = api.glbId(modelAsset) || asset.getId();
-        if (uploaded.has(old)) api.setGlbId(modelAsset, uploaded.get(old).Ba());
+        if (uploaded.has(old)) api.setGlbId(modelAsset, uploaded.get(old)[methods.recordId]());
       } else if (asset.pa() === 6) {
         const sequence = api.sequence(asset);
-        api.setStrings(sequence, 1, api.frameIds(sequence).map(id => uploaded.get(id)?.Ba() ?? id));
+        api.setStrings(sequence, 1, api.frameIds(sequence).map(id => uploaded.get(id)?.[methods.recordId]() ?? id));
       }
     }
-    const newIds = new Set(Array.from(uploaded.values(), r => r.Ba()));
+    const newIds = new Set(Array.from(uploaded.values(), r => r[methods.recordId]()));
     if (Array.from(api.dependencies(source).keys()).some(id => !newIds.has(id))) fail('An asset reference could not be remapped. Uploaded files remain only in the test destination.');
     runtime.check();
     if (JSON.stringify(serializeSource()) !== baseline || model.ha.value !== 0 || !stillThisProject()) fail('Destination changed before applying source.');
@@ -263,7 +278,7 @@ export async function effectMakerOperation(operation, input = {}, runtime) {
       return model.save();
     });
     if (!stillThisProject() || model.ha.value !== 0 || JSON.stringify(serializeSource()) !== expectedSource) fail('The expected imported source was not confirmed saved. Inspect the test destination.');
-    return { status: 'saved-reload-required', destinationId: route[1], summary: summary(sourceOf()), remappedAssets: Array.from(uploaded, ([oldId, record]) => ({ oldId, newId: record.Ba() })) };
+    return { status: 'saved-reload-required', destinationId: route[1], summary: summary(sourceOf()), remappedAssets: Array.from(uploaded, ([oldId, record]) => ({ oldId, newId: record[methods.recordId]() })) };
   } catch (reason) {
     if (importLock && runtime.writesStarted) importLock.reloadRequired = true;
     throw runtime.error(reason);

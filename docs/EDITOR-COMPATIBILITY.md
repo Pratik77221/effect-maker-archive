@@ -1,6 +1,6 @@
-# Editor compatibility review — 22 September 2026
+# Editor compatibility review — 5 October 2026
 
-The extension uses explicit profiles because Google's compiled identifiers can change between builds. The current profile was checked against the public JavaScript resource referenced by a newly opened Effect Maker home page. This is client-code evidence and offline integration verification; it does not establish production backend acceptance.
+The extension uses explicit profiles because Google's compiled identifiers can change between builds. The current profile was checked against the public JavaScript resource referenced by the public Effect Maker home page downloaded on 5 October 2026. This is client-code evidence and offline integration verification; it does not establish production backend acceptance.
 
 ## Reviewed clients
 
@@ -8,9 +8,11 @@ The extension uses explicit profiles because Google's compiled identifiers can c
 | --- | --- | --- |
 | Original | `effectmaker.effectmaker.en_GB.k9eBOpQ9YWc.2020.O` | `f5ce71f0d7c60850b458033b069b6642798c8014acfd67a4f75b54f571ebd611` |
 | 11 September | `effectmaker.effectmaker.en_GB.gfHrZWkok9A.2020.O` | `ff8ee50a8ca67647f3b99049b9247852b13b1a29e54d280f96d91111bb7c706c` |
-| Current, 22 September | `effectmaker.effectmaker.en_GB.JjyImd5Sung.2020.O` | `767c7f62dcb557060c2907a320496ef16f864548c16076f6d6820dc7ea4260ce` |
+| 22 September | `effectmaker.effectmaker.en_GB.JjyImd5Sung.2020.O` | `767c7f62dcb557060c2907a320496ef16f864548c16076f6d6820dc7ea4260ce` |
 
-Public resources: [original client](https://www.youtube.com/s/_/effectmaker/_/js/k=effectmaker.effectmaker.en_GB.k9eBOpQ9YWc.2020.O/am=AAAAAAAi/d=1/br=1/rs=AC3dgb2KK8K7vKFU91MyCGuNUsM99iHIlg/m=base), [11 September client](https://www.youtube.com/s/_/effectmaker/_/js/k=effectmaker.effectmaker.en_GB.gfHrZWkok9A.2020.O/am=AAAAAAAi/d=1/br=1/rs=AC3dgb0ASIWNJWGnHljggbTnp57xMqu3oA/m=base), [22 September client](https://www.youtube.com/s/_/effectmaker/_/js/k=effectmaker.effectmaker.en_GB.JjyImd5Sung.2020.O/am=AAAAAAAi/d=1/br=1/rs=AC3dgb3bvg4kj3K9u8xqCySPICP6X5lK2g/m=base). Downloaded Google client code is not included in the repository or release ZIP.
+| Current, 5 October | `effectmaker.effectmaker.en_GB.kns6RAOc7Cs.2020.O` | `c7697c11ed35f1c629fc7fb342759e9f02e54b0ce42892ffe26df756b849fcec` |
+
+Public resources: [original client](https://www.youtube.com/s/_/effectmaker/_/js/k=effectmaker.effectmaker.en_GB.k9eBOpQ9YWc.2020.O/am=AAAAAAAi/d=1/br=1/rs=AC3dgb2KK8K7vKFU91MyCGuNUsM99iHIlg/m=base), [11 September client](https://www.youtube.com/s/_/effectmaker/_/js/k=effectmaker.effectmaker.en_GB.gfHrZWkok9A.2020.O/am=AAAAAAAi/d=1/br=1/rs=AC3dgb0ASIWNJWGnHljggbTnp57xMqu3oA/m=base), [22 September client](https://www.youtube.com/s/_/effectmaker/_/js/k=effectmaker.effectmaker.en_GB.JjyImd5Sung.2020.O/am=AAAAAAAi/d=1/br=1/rs=AC3dgb3bvg4kj3K9u8xqCySPICP6X5lK2g/m=base). [5 October client](https://www.youtube.com/s/_/effectmaker/_/js/k=effectmaker.effectmaker.en_GB.kns6RAOc7Cs.2020.O/am=AAAAAAAR/d=1/rs=AC3dgb3Wx7LQN075y99mJkXOpoiS4V4fDA/m=base). Downloaded Google client code is not included in the repository or release ZIP.
 
 ## Reviewed mappings
 
@@ -38,18 +40,40 @@ The JSON-array marker remains `id(..., 32)`. Source data stays in project field 
 
 Graph `v()` returns variables, not edges. Summaries count incoming connections across node inputs in both main and nested graphs, and retain a separate variable count for empty-destination checks.
 
-Each profile accepts archives from itself and the earlier reviewed builds. Thus both older backup formats can be imported into the current editor, while unreviewed downgrades are refused. Unknown editor builds remain blocked before model access.
+Each profile accepts archives from itself and the earlier reviewed builds. Thus all three older backup formats can be imported into the current editor, while unreviewed downgrades are refused. Unknown editor builds remain blocked before model access.
+
+
+### 5 October mapping
+
+| Role | Current identifier |
+| --- | --- |
+| Injector / message accessor | `J` / `Vo` |
+| Model / project / source | `TC` / `zD` / `JD` |
+| Project ID / title / channel | `qb` / `Ef` / `Od` |
+| Scene / object map / children | `xD` / `KM` / `tb` |
+| Asset tree / entries / dependencies | `UM` / `Sy` / `ixa` |
+| Graph / subgraphs / node map | `VM` / `cy` / `Ob` |
+| Node inputs / incoming connections | `Gy` / `LM` |
+| Asset service / URL / upload / destination option | `kB` / `mB` / `KS` / `Yd` |
+| Asset record / record ID method | `jM` / `Ca` |
+| Asset name / image method | `Pa` / `Ua` |
+| Command token / dispatcher / native resolver | `lt` / `cR` / `f_a` |
+| Image binary getter / setter | `Vy` / `wxa` |
+| GLB message / binary getter / setter | `Zy` / `Yy` / `Bxa` |
+| Sequence / frames / string setter | `Uy` / `Ty` / `UG` |
+
+The source field numbers and binary-reference fields remain compatible in the synthetic native-client checks. The new profile explicitly selects renamed object methods, rather than relying on the previous build's methods.
 
 ## Reproduce the offline checks
 
-Save the three resources above to local files in the same order, then run:
+Save the four resources above to local files in the same order, then run:
 
 ```sh
-node scripts/check-editor-contract.js /path/to/k9eBOpQ9YWc-client.js /path/to/gfHrZWkok9A-client.js /path/to/JjyImd5Sung-client.js
+node scripts/check-editor-contract.js /path/to/k9eBOpQ9YWc-client.js /path/to/gfHrZWkok9A-client.js /path/to/JjyImd5Sung-client.js /path/to/kns6RAOc7Cs-client.js
 ```
 
-The script verifies all three hashes before loading the definitions in an offline VM with no network/session implementation. It uses synthetic authoring data and the native serializer, message classes, dependency traversal, dispatcher and apply-source resolver. Uploads return synthetic native asset records; downloads and cloud save are simulated.
+The script verifies all four hashes before loading the definitions in an offline VM with no network/session implementation. It uses synthetic authoring data and the native serializer, message classes, dependency traversal, dispatcher and apply-source resolver. Uploads return synthetic native asset records; downloads and cloud save are simulated.
 
-All six supported paths are exercised: original → original, original → 11 September, original → 22 September, 11 September → 11 September, 11 September → 22 September and 22 September → 22 September. Each check compares the complete source after remapping only the expected binary fields and confirms that the destination records do not retain the source channel ID.
+All ten same-build and forward import paths are exercised across the four reviewed builds. Each check compares the complete source after remapping only the expected binary fields and confirms that destination records do not retain the source channel ID.
 
 This check does not render real GLBs/images, execute AI, upload to Google or prove persistence after a browser reload. A live test on a disposable empty project is still needed for those claims.

@@ -1,6 +1,6 @@
 # Verification status
 
-Release: **0.4.5** · recorded **22 September 2026**.
+Release: **0.4.6** · recorded **5 October 2026**.
 
 ## Reported real-world behavior
 
@@ -10,7 +10,7 @@ Earlier browser checks verified capture/restore of a text property and position,
 
 ## Automated coverage
 
-The final suite passes **103 tests** on Node.js v24.20.0. Coverage includes:
+The final suite passes **109 tests** on Node.js v24.20.0. Coverage includes:
 
 - Archive checksums, extraction/repacking, diffs and local Git checkpoints.
 - PNG, image-sequence and GLB reference remapping while preserving authoring IDs and links.
@@ -19,25 +19,27 @@ The final suite passes **103 tests** on Node.js v24.20.0. Coverage includes:
 - Removal of the overall deadline: a fake-clock import completes four 80-second uploads (320 seconds total), then applies and saves. Further checks verify cancellation after ten minutes, a later stalled upload's own 90-second deadline and progress text when no stage limit applies.
 - Serialized editor bridge, UI error states and a single reusable extension window.
 - GitHub authorization, token storage, push/pull integrity, large backups, history, conflicts, public-backup consent and permission failures.
-- All three reviewed editor profiles, all six supported backup import combinations, refusal of unknown builds/downgrades and serialized execution for every supported build.
+- All four reviewed editor profiles, all ten supported backup import combinations, refusal of unknown builds/downgrades and serialized execution for every supported build.
 - New-repository discovery with the existing login, preservation of branch/backup/revision selection, refresh failure recovery and deferred refresh after returning from repository creation.
 - Public release/version checks without backup credentials, ZIP hash and path validation, rejection of changed permission contracts, bounded decompression, folder validation, backup-before-write ordering, manifest-last replacement and recovery after a simulated write failure.
 - Update UI permission denial, project-operation locking, folder setup, verification before installation and reload only after success.
 
 Editor and GitHub services are simulated in the automated suite. Passing tests do not prove that the live services accept every project.
 
-A browser check in the 0.4.2 release of the actual rendered GitHub panel with simulated services confirmed the refresh controls are visible and that refreshing preserves a selected repository, non-default branch, backup and earlier revision. No live GitHub repository was created for this UI check. Those repository controls remain unchanged in 0.4.5.
+A browser check in the 0.4.2 release of the actual rendered GitHub panel with simulated services confirmed the refresh controls are visible and that refreshing preserves a selected repository, non-default branch, backup and earlier revision. No live GitHub repository was created for this UI check. Those repository controls remain unchanged in 0.4.6.
 
 ## Current client contract checks
 
 The new update controls were tested with simulated filesystem handles and service responses. The browser connection was unavailable for this release's visual check and native folder-permission/reload test. The real Chrome permission dialog, persistent folder grant and self-reload sequence therefore remain unverified. The local preview does not write real extension files. [Update details and fallback](UPDATES.md).
 
-On 22 September 2026, a new browser tab at Effect Maker's home page served `effectmaker.effectmaker.en_GB.JjyImd5Sung.2020.O`. Version 0.4.2 recognized the two earlier builds. This new client renamed the injector, message accessor, model, asset, graph and command symbols, and changed the explicit upload destination option from `Ud` to `Vd`.
+On 5 October 2026, the downloaded public home page referenced `effectmaker.effectmaker.en_GB.kns6RAOc7Cs.2020.O`. The reviewed code renamed asset-record IDs (`Ca`), asset names/images (`Pa`/`Ua`), graph node access (`Ob`) and the upload destination option (`Yd`). A separate browser-tab inspection timed out, so this release has public client-code and offline integration evidence rather than a live backend round trip. Existing projects were not opened or edited.
+
+Previously, on 22 September 2026, a new browser tab at Effect Maker's home page served `effectmaker.effectmaker.en_GB.JjyImd5Sung.2020.O`. Version 0.4.2 recognized the two earlier builds. This new client renamed the injector, message accessor, model, asset, graph and command symbols, and changed the explicit upload destination option from `Ud` to `Vd`.
 
 Downloaded the public script URL observed in that tab and reviewed the native serialization, source command, dependency walker, save method and upload/download implementation. No existing project was opened or edited during this compatibility check.
 
-`scripts/check-editor-contract.js` passes all six same-build and forward import combinations against the three actual downloaded native client definitions. It exercises named objects, graph connections and a subgraph, image/sequence/GLB binary references, AI prompt references, native dispatch/source application and destination upload records. It verifies that only binary IDs change in the imported source. The surrounding browser, binary transfer and cloud save are simulated; this is not a live backend or AI-generation test. [Build hashes, mappings and reproduction](EDITOR-COMPATIBILITY.md).
+`scripts/check-editor-contract.js` passes all ten same-build and forward import combinations against the four actual downloaded native client definitions. It exercises named objects, graph connections and a subgraph, image/sequence/GLB binary references, AI prompt references, native dispatch/source application and destination upload records. It verifies that only binary IDs change in the imported source. The surrounding browser, binary transfer and cloud save are simulated; this is not a live backend or AI-generation test. [Build hashes, mappings and reproduction](EDITOR-COMPATIBILITY.md).
 
 ## Compatibility boundary
 
-The adapter targets the three explicitly reviewed English UK builds listed in the README and rejects other builds/locales until checked. Earlier backups can move forward to the current build; downgrading to an older editor is refused. Reload the editor to move to Google's currently served build. Publication metadata and preferences are outside the archive contract. AI-service availability, account permissions, publication limits and future Google editor changes remain outside this extension's control.
+The adapter targets the four explicitly reviewed English UK builds listed in the README and rejects other builds/locales until checked. Earlier backups can move forward to the current build; downgrading to an older editor is refused. Reload the editor to move to Google's currently served build. Publication metadata and preferences are outside the archive contract. AI-service availability, account permissions, publication limits and future Google editor changes remain outside this extension's control.

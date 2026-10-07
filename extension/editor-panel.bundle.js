@@ -14,7 +14,7 @@ const createOperationRuntime = function createOperationRuntime(options = {}) {
   let current = { stage: 'prepare', message: 'Preparing…', startedAt: started, limitMs: null };
   const events = [];
   const snapshot = () => ({
-    extensionVersion: '0.4.6', operation: options.operation ?? 'project operation',
+    extensionVersion: '0.4.7', operation: options.operation ?? 'project operation',
     startedAt: new Date(started).toISOString(), elapsedMs: Date.now() - started,
     stage: current.stage, message: current.message, stageElapsedMs: Date.now() - current.startedAt,
     stageLimitMs: current.limitMs, totalLimitMs: null, writesStarted,
@@ -113,7 +113,8 @@ const operation = async function effectMakerOperation(operation, input = {}, run
     const previousBuild = 'effectmaker.effectmaker.en_GB.k9eBOpQ9YWc.2020.O';
     const september11Build = 'effectmaker.effectmaker.en_GB.gfHrZWkok9A.2020.O';
     const september22Build = 'effectmaker.effectmaker.en_GB.JjyImd5Sung.2020.O';
-    const currentBuild = 'effectmaker.effectmaker.en_GB.kns6RAOc7Cs.2020.O';
+    const october5Build = 'effectmaker.effectmaker.en_GB.kns6RAOc7Cs.2020.O';
+    const currentBuild = 'effectmaker.effectmaker.en_GB.DUk-5bdFiPk.2020.O';
     const profiles = {
       [previousBuild]: {
         symbols: {
@@ -148,7 +149,7 @@ const operation = async function effectMakerOperation(operation, input = {}, run
         projectId: 'nb', title: 'wf', channelId: 'Ld', children: 'Ab', uploadProject: 'Vd',
         accepts: [previousBuild, september11Build, september22Build]
       },
-      [currentBuild]: {
+      [october5Build]: {
         symbols: {
           injector: 'J', Model: 'TC', Source: 'JD', message: 'Vo', Scene: 'xD', objects: 'KM',
           assetTree: 'UM', assets: 'Sy', graph: 'VM', subgraphs: 'cy', dependencies: 'ixa',
@@ -158,7 +159,19 @@ const operation = async function effectMakerOperation(operation, input = {}, run
         },
         projectId: 'qb', title: 'Ef', channelId: 'Od', children: 'tb', uploadProject: 'Yd',
         methods: { assetName: 'Pa', image: 'Ua', recordId: 'Ca', nodes: 'Ob' },
-        accepts: [previousBuild, september11Build, september22Build, currentBuild]
+        accepts: [previousBuild, september11Build, september22Build, october5Build]
+      },
+      [currentBuild]: {
+        symbols: {
+          injector: 'J', Model: 'ZC', Source: 'PD', message: 'cp', Scene: 'DD', objects: 'bN',
+          assetTree: 'lN', assets: 'az', graph: 'mN', subgraphs: 'ly', dependencies: 'hxa',
+          AssetService: 'qB', assetUrl: 'sB', markJson: 'od', Command: 'tt', dispatch: 'uR', upload: 'bT',
+          imageId: 'dz', setImageId: 'vxa', glb: 'hz', glbId: 'gz', setGlbId: 'Axa',
+          sequence: 'cz', setStrings: 'aH', frameIds: 'bz', nodeInputs: 'Py', inputLinks: 'cN'
+        },
+        projectId: 'wb', title: 'Ff', channelId: 'Od', children: 'rb', uploadProject: 'Zd',
+        methods: { assetName: 'Qa', image: 'Ua', recordId: 'Ca', nodes: 'Kb' },
+        accepts: [previousBuild, september11Build, september22Build, october5Build, currentBuild]
       }
 
     };
@@ -390,10 +403,10 @@ const renderEditorPanel = function renderEditorPanel(invoke, options = {}) {
   const id = 'em-local-archive-controls';
   const previous = document.getElementById(id);
   if (previous?.dataset.busy === 'true') {
-    if (previous.dataset.version !== '0.4.6' && !previous.querySelector?.('[data-upgrade-notice]')) {
+    if (previous.dataset.version !== '0.4.7' && !previous.querySelector?.('[data-upgrade-notice]')) {
       const notice = document.createElement('p');
       notice.dataset.upgradeNotice = 'true';
-      notice.textContent = 'An older import is still running. Reload this editor before testing version 0.4.6.';
+      notice.textContent = 'An older import is still running. Reload this editor before testing version 0.4.7.';
       previous.append(notice);
       const reload = document.createElement('button');
       reload.type = 'button';
@@ -407,7 +420,7 @@ const renderEditorPanel = function renderEditorPanel(invoke, options = {}) {
   previous?.remove();
   const host = document.createElement('section');
   host.id = id;
-  host.dataset.version = '0.4.6';
+  host.dataset.version = '0.4.7';
   if (options.sidePanel) host.dataset.surface = 'side-panel';
   host.tabIndex = -1;
   host.setAttribute('role', 'dialog');
@@ -623,7 +636,7 @@ const renderEditorPanel = function renderEditorPanel(invoke, options = {}) {
   const local = add('span', undefined, footer);
   icon('computer', local);
   add('span', 'For YouTube Effect Maker', local);
-  add('span', 'Version 0.4.6', footer);
+  add('span', 'Version 0.4.7', footer);
   const updateButton = options.updates ? button('Update from GitHub', () => {}, footer, 'ema-update-link') : undefined;
   function setStatus(state, title) {
     status.dataset.state = state;

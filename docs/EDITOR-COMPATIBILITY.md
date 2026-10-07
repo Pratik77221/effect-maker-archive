@@ -1,4 +1,4 @@
-# Editor compatibility review — 5 October 2026
+# Editor compatibility review — 7 October 2026
 
 The extension uses explicit profiles because Google's compiled identifiers can change between builds. The current profile was checked against the public JavaScript resource referenced by the public Effect Maker home page downloaded on 5 October 2026. This is client-code evidence and offline integration verification; it does not establish production backend acceptance.
 
@@ -10,7 +10,9 @@ The extension uses explicit profiles because Google's compiled identifiers can c
 | 11 September | `effectmaker.effectmaker.en_GB.gfHrZWkok9A.2020.O` | `ff8ee50a8ca67647f3b99049b9247852b13b1a29e54d280f96d91111bb7c706c` |
 | 22 September | `effectmaker.effectmaker.en_GB.JjyImd5Sung.2020.O` | `767c7f62dcb557060c2907a320496ef16f864548c16076f6d6820dc7ea4260ce` |
 
-| Current, 5 October | `effectmaker.effectmaker.en_GB.kns6RAOc7Cs.2020.O` | `c7697c11ed35f1c629fc7fb342759e9f02e54b0ce42892ffe26df756b849fcec` |
+| 5 October | `effectmaker.effectmaker.en_GB.kns6RAOc7Cs.2020.O` | `c7697c11ed35f1c629fc7fb342759e9f02e54b0ce42892ffe26df756b849fcec` |
+
+| Current, 7 October | `effectmaker.effectmaker.en_GB.DUk-5bdFiPk.2020.O` | `8851e6d196d3afea1c2d51abd618ad317dd6442504a24806c71578b47f0723b6` |
 
 Public resources: [original client](https://www.youtube.com/s/_/effectmaker/_/js/k=effectmaker.effectmaker.en_GB.k9eBOpQ9YWc.2020.O/am=AAAAAAAi/d=1/br=1/rs=AC3dgb2KK8K7vKFU91MyCGuNUsM99iHIlg/m=base), [11 September client](https://www.youtube.com/s/_/effectmaker/_/js/k=effectmaker.effectmaker.en_GB.gfHrZWkok9A.2020.O/am=AAAAAAAi/d=1/br=1/rs=AC3dgb0ASIWNJWGnHljggbTnp57xMqu3oA/m=base), [22 September client](https://www.youtube.com/s/_/effectmaker/_/js/k=effectmaker.effectmaker.en_GB.JjyImd5Sung.2020.O/am=AAAAAAAi/d=1/br=1/rs=AC3dgb3bvg4kj3K9u8xqCySPICP6X5lK2g/m=base). [5 October client](https://www.youtube.com/s/_/effectmaker/_/js/k=effectmaker.effectmaker.en_GB.kns6RAOc7Cs.2020.O/am=AAAAAAAR/d=1/rs=AC3dgb3Wx7LQN075y99mJkXOpoiS4V4fDA/m=base). Downloaded Google client code is not included in the repository or release ZIP.
 
@@ -36,11 +38,11 @@ These are exported identifiers on the editor's native namespace, not public APIs
 | GLB message / binary getter / setter | `Dy` / `Cy` / `nxa` | `By` / `Ay` / `oxa` | `Fy` / `Ey` / `uxa` |
 | Sequence message / frame IDs / repeated-string setter | `yy` / `xy` / `nG` | `wy` / `vy` / `jG` | `Ay` / `zy` / `nG` |
 
-The JSON-array marker remains `id(..., 32)`. Source data stays in project field 4; scene, asset tree and graph stay in source fields 2, 3 and 4. Binary IDs remain image field 6, GLB field 7 and sequence frame list field 1. The command still accepts `applyEffectSourceCommand` with `effectSourceJspb` and `assetsJspb`. Its resolver parses native messages, replaces binary records and applies the source. Model save still uses the destination's current project and revision state.
+The earlier builds use JSON-array marker `id(..., 32)`; 7 October uses `od(..., 32)`. Source data stays in project field 4; scene, asset tree and graph stay in source fields 2, 3 and 4. Binary IDs remain image field 6, GLB field 7 and sequence frame list field 1. The command still accepts `applyEffectSourceCommand` with `effectSourceJspb` and `assetsJspb`. Its resolver parses native messages, replaces binary records and applies the source. Model save still uses the destination's current project and revision state.
 
 Graph `v()` returns variables, not edges. Summaries count incoming connections across node inputs in both main and nested graphs, and retain a separate variable count for empty-destination checks.
 
-Each profile accepts archives from itself and the earlier reviewed builds. Thus all three older backup formats can be imported into the current editor, while unreviewed downgrades are refused. Unknown editor builds remain blocked before model access.
+Each profile accepts archives from itself and the earlier reviewed builds. Thus all four older backup formats can be imported into the current editor, while unreviewed downgrades are refused. Unknown editor builds remain blocked before model access.
 
 
 ### 5 October mapping
@@ -64,16 +66,36 @@ Each profile accepts archives from itself and the earlier reviewed builds. Thus 
 
 The source field numbers and binary-reference fields remain compatible in the synthetic native-client checks. The new profile explicitly selects renamed object methods, rather than relying on the previous build's methods.
 
+### 7 October mapping
+
+Public resource: [7 October client](https://www.youtube.com/s/_/effectmaker/_/js/k=effectmaker.effectmaker.en_GB.DUk-5bdFiPk.2020.O/am=AAAAAAAR/d=1/rs=AC3dgb15AHNblu1PmEB8uv4BgrnKucfJcw/m=base).
+
+| Role | Identifier |
+| --- | --- |
+| Injector / message / JSON marker | `J` / `cp` / `od` |
+| Model / project / source | `ZC` / `FD` / `PD` |
+| Project ID / title / channel | `wb` / `Ff` / `Od` |
+| Scene / objects / children | `DD` / `bN` / `rb` |
+| Asset tree / entries / dependencies | `lN` / `az` / `hxa` |
+| Graph / subgraphs / nodes | `mN` / `ly` / `Kb` |
+| Node inputs / links | `Py` / `cN` |
+| Asset service / URL / upload / project option | `qB` / `sB` / `bT` / `Zd` |
+| Record / ID / asset name / image | `BM` / `Ca` / `Qa` / `Ua` |
+| Command token / dispatch / resolver | `tt` / `uR` / `C_a` |
+| Image getter / setter | `dz` / `vxa` |
+| GLB / ID / setter | `hz` / `gz` / `Axa` |
+| Sequence / frames / string setter | `cz` / `bz` / `aH` |
+
 ## Reproduce the offline checks
 
-Save the four resources above to local files in the same order, then run:
+Save the five resources above to local files in the same order, then run:
 
 ```sh
-node scripts/check-editor-contract.js /path/to/k9eBOpQ9YWc-client.js /path/to/gfHrZWkok9A-client.js /path/to/JjyImd5Sung-client.js /path/to/kns6RAOc7Cs-client.js
+node scripts/check-editor-contract.js /path/to/k9eBOpQ9YWc-client.js /path/to/gfHrZWkok9A-client.js /path/to/JjyImd5Sung-client.js /path/to/kns6RAOc7Cs-client.js /path/to/DUk-5bdFiPk-client.js
 ```
 
-The script verifies all four hashes before loading the definitions in an offline VM with no network/session implementation. It uses synthetic authoring data and the native serializer, message classes, dependency traversal, dispatcher and apply-source resolver. Uploads return synthetic native asset records; downloads and cloud save are simulated.
+The script verifies all five hashes before loading the definitions in an offline VM with no network/session implementation. It uses synthetic authoring data and the native serializer, message classes, dependency traversal, dispatcher and apply-source resolver. Uploads return synthetic native asset records; downloads and cloud save are simulated.
 
-All ten same-build and forward import paths are exercised across the four reviewed builds. Each check compares the complete source after remapping only the expected binary fields and confirms that destination records do not retain the source channel ID.
+All fifteen same-build and forward import paths are exercised across the five reviewed builds. Each check compares the complete source after remapping only the expected binary fields and confirms that destination records do not retain the source channel ID.
 
 This check does not render real GLBs/images, execute AI, upload to Google or prove persistence after a browser reload. A live test on a disposable empty project is still needed for those claims.

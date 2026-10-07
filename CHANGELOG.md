@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.4.7 — 7 October 2026
+
+- Support `effectmaker.effectmaker.en_GB.DUk-5bdFiPk.2020.O`, fixing the Unsupported editor build error.
+- Review and map the renamed serializer marker, project, asset, graph and command functions and methods.
+- Preserve forward import from all four earlier reviewed builds.
+- Verify all fifteen native-client export/import paths offline using synthetic source and binaries; cloud transfer/save remain simulated.
+
 ## 0.4.6 — 5 October 2026
 
 - Support the reviewed `effectmaker.effectmaker.en_GB.kns6RAOc7Cs.2020.O` editor build.

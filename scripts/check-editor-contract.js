@@ -18,10 +18,13 @@ const clients = [
     injector: 'K', Command: 'Ws', config: 'en', handlers: 'ga', message: 'Jo' },
   { build: 'effectmaker.effectmaker.en_GB.kns6RAOc7Cs.2020.O', sha256: 'c7697c11ed35f1c629fc7fb342759e9f02e54b0ce42892ffe26df756b849fcec',
     Model: 'TC', Project: 'zD', Source: 'JD', Record: 'jM', Apply: 'f_a', dispatch: 'cR', AssetService: 'kB', upload: 'KS', uploadProject: 'Yd', dependencies: 'ixa',
-    injector: 'J', Command: 'lt', config: 'zn', handlers: 'ga', message: 'Vo' }
+    injector: 'J', Command: 'lt', config: 'zn', handlers: 'ga', message: 'Vo' },
+  { build: 'effectmaker.effectmaker.en_GB.DUk-5bdFiPk.2020.O', sha256: '8851e6d196d3afea1c2d51abd618ad317dd6442504a24806c71578b47f0723b6',
+    Model: 'ZC', Project: 'FD', Source: 'PD', Record: 'BM', Apply: 'C_a', dispatch: 'uR', AssetService: 'qB', upload: 'bT', uploadProject: 'Zd', dependencies: 'hxa',
+    markJson: 'od', injector: 'J', Command: 'tt', config: 'Hn', handlers: 'ga', message: 'cp' }
 
 ];
-if (process.argv.length !== clients.length + 2) throw new Error('Usage: node scripts/check-editor-contract.js <k9eBOpQ9YWc-client.js> <gfHrZWkok9A-client.js> <JjyImd5Sung-client.js> <kns6RAOc7Cs-client.js>');
+if (process.argv.length !== clients.length + 2) throw new Error('Usage: node scripts/check-editor-contract.js <k9eBOpQ9YWc-client.js> <gfHrZWkok9A-client.js> <JjyImd5Sung-client.js> <kns6RAOc7Cs-client.js> <DUk-5bdFiPk-client.js>');
 
 async function loadClient(filename, profile) {
   const code = await readFile(filename, 'utf8');
@@ -88,7 +91,7 @@ function sourceFixture() {
 }
 
 function install({ profile, ns }, projectId, source = []) {
-  const parse = (Type, value) => { const data = JSON.parse(JSON.stringify(value)); ns.id(data, 32); return new Type(data); };
+  const parse = (Type, value) => { const data = JSON.parse(JSON.stringify(value)); ns[profile.markJson ?? 'id'](data, 32); return new Type(data); };
   const model = new ns[profile.Model]({}, {}, {});
   model.v = parse(ns[profile.Project], fields({ 1: 'channel-' + projectId, 2: projectId, 4: source, 9: 'Any project name' }));
   const trace = [];

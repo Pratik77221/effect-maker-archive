@@ -15,7 +15,8 @@ export async function effectMakerOperation(operation, input = {}, runtime) {
     const previousBuild = 'effectmaker.effectmaker.en_GB.k9eBOpQ9YWc.2020.O';
     const september11Build = 'effectmaker.effectmaker.en_GB.gfHrZWkok9A.2020.O';
     const september22Build = 'effectmaker.effectmaker.en_GB.JjyImd5Sung.2020.O';
-    const currentBuild = 'effectmaker.effectmaker.en_GB.kns6RAOc7Cs.2020.O';
+    const october5Build = 'effectmaker.effectmaker.en_GB.kns6RAOc7Cs.2020.O';
+    const currentBuild = 'effectmaker.effectmaker.en_GB.DUk-5bdFiPk.2020.O';
     const profiles = {
       [previousBuild]: {
         symbols: {
@@ -50,7 +51,7 @@ export async function effectMakerOperation(operation, input = {}, runtime) {
         projectId: 'nb', title: 'wf', channelId: 'Ld', children: 'Ab', uploadProject: 'Vd',
         accepts: [previousBuild, september11Build, september22Build]
       },
-      [currentBuild]: {
+      [october5Build]: {
         symbols: {
           injector: 'J', Model: 'TC', Source: 'JD', message: 'Vo', Scene: 'xD', objects: 'KM',
           assetTree: 'UM', assets: 'Sy', graph: 'VM', subgraphs: 'cy', dependencies: 'ixa',
@@ -60,7 +61,19 @@ export async function effectMakerOperation(operation, input = {}, runtime) {
         },
         projectId: 'qb', title: 'Ef', channelId: 'Od', children: 'tb', uploadProject: 'Yd',
         methods: { assetName: 'Pa', image: 'Ua', recordId: 'Ca', nodes: 'Ob' },
-        accepts: [previousBuild, september11Build, september22Build, currentBuild]
+        accepts: [previousBuild, september11Build, september22Build, october5Build]
+      },
+      [currentBuild]: {
+        symbols: {
+          injector: 'J', Model: 'ZC', Source: 'PD', message: 'cp', Scene: 'DD', objects: 'bN',
+          assetTree: 'lN', assets: 'az', graph: 'mN', subgraphs: 'ly', dependencies: 'hxa',
+          AssetService: 'qB', assetUrl: 'sB', markJson: 'od', Command: 'tt', dispatch: 'uR', upload: 'bT',
+          imageId: 'dz', setImageId: 'vxa', glb: 'hz', glbId: 'gz', setGlbId: 'Axa',
+          sequence: 'cz', setStrings: 'aH', frameIds: 'bz', nodeInputs: 'Py', inputLinks: 'cN'
+        },
+        projectId: 'wb', title: 'Ff', channelId: 'Od', children: 'rb', uploadProject: 'Zd',
+        methods: { assetName: 'Qa', image: 'Ua', recordId: 'Ca', nodes: 'Kb' },
+        accepts: [previousBuild, september11Build, september22Build, october5Build, currentBuild]
       }
 
     };

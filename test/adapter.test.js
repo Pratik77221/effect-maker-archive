@@ -4,7 +4,7 @@ import { effectMakerOperation } from '../extension/adapter.js';
 import { digest, sourceDigest } from '../lib/archive.js';
 import { createOperationRuntime } from '../extension/runtime.js';
 
-import { BUILD, SEPTEMBER_11_BUILD, SEPTEMBER_22_BUILD, CURRENT_BUILD, REVIEWED_BUILDS, setup } from '../fixtures/editor-model.js';
+import { BUILD, SEPTEMBER_11_BUILD, SEPTEMBER_22_BUILD, OCTOBER_5_BUILD, CURRENT_BUILD, REVIEWED_BUILDS, setup } from '../fixtures/editor-model.js';
 
 test('incompatible build and non-editor pages fail before model operations', async () => {
   setup({ build: 'unknown' });
@@ -57,7 +57,7 @@ test('unknown archive builds and downgrades refuse writes', async () => {
   }
 });
 
-for (const [build, dependency] of [[SEPTEMBER_11_BUILD, 'Wwa'], [SEPTEMBER_22_BUILD, 'bxa'], [CURRENT_BUILD, 'ixa']]) test('missing renamed functions refuse writes on ' + build, async () => {
+for (const [build, dependency] of [[SEPTEMBER_11_BUILD, 'Wwa'], [SEPTEMBER_22_BUILD, 'bxa'], [OCTOBER_5_BUILD, 'ixa'], [CURRENT_BUILD, 'hxa']]) test('missing renamed functions refuse writes on ' + build, async () => {
   const { ns, trace } = setup({ build });
   delete ns[dependency];
   await assert.rejects(effectMakerOperation('export'), new RegExp('dependencies \\(' + dependency + '\\)'));

@@ -354,3 +354,37 @@ test('stalled asset download times out without returning a partial archive', asy
     assert.equal(signal.aborted, true);
   } finally { runtime.finish(); }
 });
+
+
+test('GIF and MIME variants import with normalized upload type and filename', async () => {
+  for (const [label, expected, signature, extension] of [
+    ['image/gif', 'image/gif', Buffer.from('GIF89a'), '.gif'],
+    ['IMAGE/JPG; charset=binary', 'image/jpeg', Buffer.from([255,216,255]), '.jpg'],
+    ['image/x-png', 'image/png', Buffer.from([137,80,78,71,13,10,26,10]), '.png'],
+    ['application/octet-stream', 'model/gltf-binary', Buffer.from('glTF'), '.glb'],
+    ['', 'image/webp', Buffer.from('RIFF0000WEBP'), '.webp']
+  ]) {
+    const { archive, trace } = setupBinaryImport();
+    const bytes = Buffer.concat([signature, Buffer.from('fixture')]);
+    Object.assign(archive.assets[0], { mime: label, size: bytes.length, base64: bytes.toString('base64'), sha256: digest(bytes) });
+    await effectMakerOperation('import', await restoreArguments(archive));
+    const upload = trace.find(item => item.upload);
+    assert.equal(upload.mime, expected);
+    assert.equal(upload.name.endsWith(extension), true);
+    assert.deepEqual(upload.bytes, bytes);
+    assert.equal(trace.at(-1), 'saved');
+  }
+});
+
+test('unrecognized generic files, unsupported types and conflicting signatures fail before writes with asset details', async () => {
+  for (const [mime, bytes, message] of [
+    ['application/octet-stream', Buffer.from('unknown'), /Unsupported asset old-image.*application\/octet-stream/],
+    ['video/mp4', Buffer.from('video'), /Unsupported asset old-image.*video\/mp4/],
+    ['image/png', Buffer.from('GIF89a'), /MIME label.*file bytes/]
+  ]) {
+    const { archive, trace } = setupBinaryImport();
+    Object.assign(archive.assets[0], { mime, size: bytes.length, base64: bytes.toString('base64'), sha256: digest(bytes) });
+    await assert.rejects(effectMakerOperation('preview-import', { archive }), message);
+    assert.deepEqual(trace, []);
+  }
+});

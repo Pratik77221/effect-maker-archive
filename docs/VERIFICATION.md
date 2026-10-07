@@ -1,6 +1,6 @@
 # Verification status
 
-Release: **0.4.7** · recorded **7 October 2026**.
+Release: **0.4.8** · recorded **7 October 2026**.
 
 ## Reported real-world behavior
 
@@ -10,9 +10,10 @@ Earlier browser checks verified capture/restore of a text property and position,
 
 ## Automated coverage
 
-The final suite passes **116 tests** on Node.js v24.20.0. Coverage includes:
+The final suite passes **118 tests** on Node.js v24.20.0. Coverage includes:
 
 - Archive checksums, extraction/repacking, diffs and local Git checkpoints.
+- GIF/MIME normalization, generic file signature detection, detailed unsupported/conflicting MIME failures before writes.
 - PNG, image-sequence and GLB reference remapping while preserving authoring IDs and links.
 - Destination-account upload options, use of new upload records and preservation of AI authoring references.
 - Command completion, source/save verification, cancellation, deadlines, changed destinations and prevention of late follow-up writes.
@@ -29,6 +30,9 @@ Editor and GitHub services are simulated in the automated suite. Passing tests d
 A browser check in the 0.4.2 release of the actual rendered GitHub panel with simulated services confirmed the refresh controls are visible and that refreshing preserves a selected repository, non-default branch, backup and earlier revision. No live GitHub repository was created for this UI check. Those repository controls remain unchanged in 0.4.6.
 
 ## Current client contract checks
+
+The reviewed 7 October client accepts `.gif` for image assets and has an explicit `image/gif` image behavior branch. Version 0.4.8 retains its original upload bytes while choosing normalized upload MIME and filename. Automated checks cover GIF, JPEG/PNG aliases, generic GLB/WebP signatures, checksum enforcement and failure before uploads for unknown or conflicting types. The user's failing archive has not been provided, so its exact asset MIME remains undiagnosed; live GIF upload is not claimed.
+
 
 On 7 October 2026, the public home page references `effectmaker.effectmaker.en_GB.DUk-5bdFiPk.2020.O`. Its downloaded bundle SHA-256 is `8851e6d196d3afea1c2d51abd618ad317dd6442504a24806c71578b47f0723b6`. The updated adapter maps the new serializer marker `od`, graph nodes `Kb`, project methods and binary services. All fifteen forward/same-build paths pass with the real native definitions. This is offline verification; no user project was inspected or changed, and no live cloud persistence or AI claim is made.
 

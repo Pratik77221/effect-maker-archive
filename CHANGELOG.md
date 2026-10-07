@@ -1,5 +1,13 @@
 # Release notes
 
+## 0.4.8 — 7 October 2026
+
+- Support GIF image binaries, which Google's reviewed native image upload flow accepts.
+- Normalize MIME case/parameters and JPEG/PNG aliases before upload.
+- Identify supported binary formats from their signatures when an archive has a generic or missing MIME label; preserve archive checksums and bytes.
+- Report the failing asset ID/MIME and reject conflicting signatures before writing.
+- Keep all five reviewed editor builds and forward-import support.
+
 ## 0.4.7 — 7 October 2026
 
 - Support `effectmaker.effectmaker.en_GB.DUk-5bdFiPk.2020.O`, fixing the Unsupported editor build error.

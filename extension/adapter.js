@@ -84,6 +84,27 @@ export async function effectMakerOperation(operation, input = {}, runtime) {
     const clone = value => JSON.parse(JSON.stringify(value));
     const hash = async bytes => Array.from(new Uint8Array(await runtime.guard(() => crypto.subtle.digest('SHA-256', bytes))), v => v.toString(16).padStart(2, '0')).join('');
     const textHash = value => hash(new TextEncoder().encode(JSON.stringify(value)));
+    const importMime = (asset, bytes) => {
+      const label = typeof asset.mime === 'string' ? asset.mime.split(';')[0].trim().toLowerCase() : '';
+      const aliases = { 'image/jpg': 'image/jpeg', 'image/pjpeg': 'image/jpeg', 'image/x-png': 'image/png' };
+      const mime = aliases[label] ?? label;
+      const starts = values => values.every((value, index) => bytes[index] === value);
+      const ascii = (offset, length) => String.fromCharCode(...bytes.subarray(offset, offset + length));
+      let detected;
+      if (starts([137, 80, 78, 71, 13, 10, 26, 10])) detected = 'image/png';
+      else if (starts([255, 216, 255])) detected = 'image/jpeg';
+      else if (['GIF87a', 'GIF89a'].includes(ascii(0, 6))) detected = 'image/gif';
+      else if (ascii(0, 4) === 'RIFF' && ascii(8, 4) === 'WEBP') detected = 'image/webp';
+      else if (ascii(0, 4) === 'glTF') detected = 'model/gltf-binary';
+      const supported = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'model/gltf-binary'];
+      if (supported.includes(mime)) {
+        if (detected && detected !== mime) fail('Asset ' + asset.id + ' has a MIME label that does not match its file bytes.');
+        return mime;
+      }
+      if (['', 'application/octet-stream', 'binary/octet-stream'].includes(mime) && detected) return detected;
+      fail('Unsupported asset ' + asset.id + ' (MIME: ' + (label || 'missing') + '). Supported imports: PNG, JPEG, GIF, WebP and GLB. Generic files need a recognizable file signature.');
+    };
+
     const route = location.hostname === 'effects.youtube.com' && location.pathname.match(/^\/edit\/([a-zA-Z0-9_-]+)$/);
     if (!route) fail('Open an Effect Maker editor project first.');
     const BUILD = Array.from(document.scripts, script => script.src.match(/\/k=(effectmaker\.effectmaker\.[^/]+)\//)?.[1]).find(Boolean);
@@ -221,13 +242,13 @@ export async function effectMakerOperation(operation, input = {}, runtime) {
         if (!dependencies.has(asset.id) || decoded.has(asset.id)) fail('Unexpected or duplicate asset.');
         runtime.check();
         if (typeof asset.id !== 'string' || !asset.id || !Number.isSafeInteger(asset.size) || asset.size < 0 || !/^[a-f0-9]{64}$/.test(asset.sha256)) fail('Invalid asset information.');
-        if (typeof asset.base64 !== 'string' || asset.base64.length > MAX_ASSET * 1.34 + 8 || !/^(image\/(png|jpeg|webp)|model\/gltf-binary)$/.test(asset.mime)) fail('This prototype imports PNG, JPEG, WebP, and GLB binaries only.');
+        if (typeof asset.base64 !== 'string' || asset.base64.length > MAX_ASSET * 1.34 + 8) fail('Invalid or oversized asset encoding: ' + asset.id);
         if (asset.base64.length % 4 !== 0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(asset.base64)) fail('Invalid asset encoding.');
         const bytes = Uint8Array.from(atob(asset.base64), c => c.charCodeAt(0));
         if (bytes.length !== asset.size || bytes.length > MAX_ASSET || await hash(bytes) !== asset.sha256) fail('Asset checksum/size mismatch.');
         total += bytes.length;
         if (total > MAX_TOTAL) fail('Archive exceeds size limit.');
-        decoded.set(asset.id, { asset, bytes });
+        decoded.set(asset.id, { asset, bytes, mime: importMime(asset, bytes) });
       }
       if (decoded.size !== dependencies.size) fail('Archive is missing a referenced asset.');
       const destinationSourceSha256 = await textHash(serializeSource());
@@ -242,14 +263,14 @@ export async function effectMakerOperation(operation, input = {}, runtime) {
     const channelId = model.v[profile.channelId]?.();
     if (decoded.size && (typeof channelId !== 'string' || !channelId)) fail('The destination channel is not ready. Reload the editor and try again.');
     const assetService = decoded.size ? api.injector().resolve(api.AssetService) : undefined;
-    for (const [oldId, { asset, bytes }] of decoded) {
+    for (const [oldId, { asset, bytes, mime }] of decoded) {
       runtime.check();
       if (JSON.stringify(serializeSource()) !== baseline || !stillThisProject() || model.ha.value !== 0) fail('Destination changed while uploading.');
-      const extension = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'model/gltf-binary': 'glb' }[asset.mime];
+      const extension = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp', 'model/gltf-binary': 'glb' }[mime];
       const filename = 'asset-' + asset.sha256.slice(0, 16) + '.' + extension;
       const result = await runtime.wait('upload', 'Uploading asset ' + (uploaded.size + 1) + ' of ' + decoded.size + '…', () => {
         runtime.markWrite();
-        return api.upload(assetService, new File([bytes], filename, { type: asset.mime }), { fileName: filename, channelId, [profile.uploadProject]: projectId });
+        return api.upload(assetService, new File([bytes], filename, { type: mime }), { fileName: filename, channelId, [profile.uploadProject]: projectId });
       }, { completed: uploaded.size, total: decoded.size, assetId: oldId, bytes: bytes.length });
       if (!result?.[methods.recordId]?.()) fail('Upload did not return a usable asset record.');
       uploaded.set(oldId, result);
